@@ -21,7 +21,7 @@ class SQLiteDBManager(object):
 
 	def __repr__(self):
 		self.cursor.execute("SELECT * FROM sqLite_master where type='table'")
-		tableNames = [ x[2] for x in self.cursor.fetchall()]
+		tableNames = [ x[2] for x in self.cursor.fetchall()] #Third var in the master_table is tbl_name
 		output = "List of Tables: %s" % tableNames
 		return output
 
