@@ -1,31 +1,29 @@
 import sqlite3
 import os
 
-class SQLiteDBManager():
+class SQLiteDBManager(object):
 	"""A class which is meant to be a front end to the database for smartsubmit.
 	The manager handles two tables. First, SampleFiles, which stores information
 	on where the sample files are stored. Second, Disks, which stores information
 	about which disks are available for storing the sample files."""
 
-	def __new__(classname, arg):
+	def __new__(self, arg):
 		"""This method makes sure we're sent a valid connection before we construct the object"""
 		if isinstance(arg, sqlite3.Connection):
-			return super(SQLiteDBManager, classname).__new__(classname)
+			return super(SQLiteDBManager, self).__new__(self)
 		else:
 			print("You have not provided a valid sqlite3 connection, construction of object aborted.")
 			return None
 
 	def __init__(self, connection):
-		if isinstance(connection, sqlite3.Connection):
-			self.connection=connection
-		else:
-			print("A valid connection is required")
-
+		self.connection=connection
 		self.cursor = connection.cursor()
 
 	def __repr__(self):
-		self.cursor.execute(".tables")
-		output = "List of Tables: %s" % self.cursor.fetchall()
+		self.cursor.execute("SELECT * FROM sqLite_master where type='table'")
+		tableNames = [ x[2] for x in self.cursor.fetchall()]
+		output = "List of Tables: %s" % tableNames
+		return output
 
 	def addSampleToDB(self, sample, localPath, hadoopPath, machine, IOSlotID, connection):
 		cursor=connection.cursor()
