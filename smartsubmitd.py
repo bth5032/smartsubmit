@@ -57,7 +57,7 @@ class SQLiteDBManager(object):
 			fileList = os.listdir(hadoopPath)
 		except FileNotFoundError:
 			print("Could not open directory %s, check that the path is typed correctly." % hadoopPath)
-		toBeAbsorbed=[sampleName for sampleName in fileList if ".root" in sample] #Make a list of files that have ".root" in the name...
+		toBeAbsorbed=[sampleName for sampleName in fileList if ".root" in sampleName] #Make a list of files that have ".root" in the name...
 		
 		print("Here's the list of samples that would go in the database")
 		for infile in toBeAbsorbed:
