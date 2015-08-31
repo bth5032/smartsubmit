@@ -1,8 +1,8 @@
 import sqlite3
 import os, time
 
-class SQLiteDBManager(object):
-	"""A class which is meant to be a front end to the database for smartsubmit.
+class sqlman(object):
+	"""SQLite Database Manager: A class which is meant to be a front end to the database for smartsubmit.
 	The manager handles two tables. First, SampleFiles, which stores information
 	on where the sample files are stored. Second, Disks, which stores information
 	about which disks are available for storing the sample files."""
@@ -75,9 +75,6 @@ class SQLiteDBManager(object):
 		for infile in toBeAbsorbed:
 			#Move each file to new locations. 
 
-	def updateDirs(self):
-		#compute the list of dictionaries
-	
 	def makeNewDatabase(self):
 		"""This method creates a connection to a new sqlite3 database, named based on 
 		the time it was created. The old database file is not effected in any way, but will
@@ -93,6 +90,7 @@ class SQLiteDBManager(object):
 
 		updateDirectoryTable()
 		makeSampleTable()
+
 	def makeSampleTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly
 		here to define the schema for the table as well as help with debugging."""
@@ -102,6 +100,20 @@ class SQLiteDBManager(object):
 		except sqlite3.OperationalError as err:
 			print("There was an error creating the table: %s" err)
 			return False
+
+	def makeDiskTable(self):
+		"""Creates the table SampleFiles, this method should not be used often, it is mainly
+		here to define the schema for the table as well as help with debugging."""
+		try:
+			self.cursor.execute("CREATE TABLE Disks(LocalPath varchar(500), Machine varchar(100), Working Boolean);")
+			return self.cursor.fetchall()
+		except sqlite3.OperationalError as err:
+			print("There was an error creating the table: %s" err)
+			return False
+
+	def removeDisk(self, path, machine):
+		try:
+			self.cursor.execute("DROP * FROM Disks")
 
 	def dropSamples(self):
 		self.cursor.execute("DROP * FROM SampleFiles")
