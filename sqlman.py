@@ -2,15 +2,12 @@ import sqlite3
 import os, time
 
 class sqlman(object):
-	"""SQLite Database Manager: A class which is meant to be a front end to the database for smartsubmit.
-	The manager handles two tables. First, SampleFiles, which stores information
-	on where the sample files are stored. Second, Disks, which stores information
-	about which disks are available for storing the sample files."""
+	"""SQLite Database Manager: A class which is meant to be a front end to the database for smartsubmit. The manager handles two tables. First, SampleFiles, which stores information on where the sample files are stored. Second, Disks, which stores information about which disks are available for storing the sample files."""
 
-	def __new__(self, arg):
+	def __new__(self, connection, databasePath, workingDir):
 		"""This method makes sure we're sent a valid connection before we construct the object"""
-		if isinstance(arg, sqlite3.Connection):
-			return super(SQLiteDBManager, self).__new__(self)
+		if isinstance(connection, sqlite3.Connection):
+			return super(sqlman, self).__new__(self)
 		else:
 			print("You have not provided a valid sqlite3 connection, construction of object aborted.")
 			return None
@@ -26,36 +23,11 @@ class sqlman(object):
 		self.workingDir = workingDir
 
 	def __repr__(self):
+		"""Returns the list of tables"""
 		self.cursor.execute("SELECT * FROM sqLite_master where type='table'")
 		tableNames = [ x[2] for x in self.cursor.fetchall()] #Third var in the master_table is tbl_name
 		output = "List of Tables: %s" % tableNames
 		return output
-
-	def addSampleFileToTable(self, sample, localPath, hadoopPath, machine, IOSlotID):
-		
-		if not isinstance(sample, basestring):
-			print("Expecting a string for the sample name")
-			return None
-		if not isinstance(sample, basestring):
-			print("Expecting a string for the local path")
-			return None
-		if not isinstance(sample, basestring):
-			print("Expecting a string for the Hadoop path" )
-			return None
-		if not isinstance(sample, basestring):
-			print("Expecting a string for the machine")
-			return None
-		if not isinstance(sample, basestring):
-			print("Expecting a string for the IOSlot Identifier")
-			return None
-
-		query = "INSERT INTO SampleFiles VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, hadoopPath, localPath, IOSlotID, machine)
-		
-		if self.cursor.execute(query):
-			return self.cursor.fetchall()
-		else:
-			print("There was an error adding the sample: %s to the database." % hadoopPath)
-			return None
 
 	def absorbDir(self, hadoopPath):
 		
@@ -73,12 +45,21 @@ class sqlman(object):
 		
 		print("Here's the list of samples that will go in the database")
 		for infile in toBeAbsorbed:
+			pass
 			#Move each file to new locations. 
 
+	def x(self, SQLCommand):
+		"""proxy to self.cursor.execute(SQLCommand), returns the output of self.cursor.fetchall() on success, None on failure."""
+		try:
+			self.cursor.execute(SQLCommand)
+			self.connection.commit()
+			return self.cursor.fetchall()
+
+		except sqlite3.OperationalError as err:
+			print("The command: %s could not be executed. \n Caught error: %s" % (SQLCommand, err))
+
 	def makeNewDatabase(self):
-		"""This method creates a connection to a new sqlite3 database, named based on 
-		the time it was created. The old database file is not effected in any way, but will
-		no longer be used to manage the files."""
+		"""This method creates a connection to a new sqlite3 database, named based on the time it was created. The old database file is not effected in any way, but will no longer be used to manage the files."""
 
 		newName = time.strftime("database_generated_at_%m_%d_%Y_%H_%M_%S")
 		newName += ".db"
@@ -88,33 +69,111 @@ class sqlman(object):
 		self.dbPath = self.workingDir+newName
 		self.connection=sqlite3.connect(self.dbPath)
 
-		updateDirectoryTable()
-		makeSampleTable()
-
 	def makeSampleTable(self):
-		"""Creates the table SampleFiles, this method should not be used often, it is mainly
-		here to define the schema for the table as well as help with debugging."""
+		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
 			self.cursor.execute("CREATE TABLE SampleFiles(Sample varchar(200), HadoopPath varchar(500), LocalPath varchar(500), CondorID varchar(50), Machine varchar(100));")
+			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
-			print("There was an error creating the table: %s" err)
+			print("There was an error creating the table: %s" % err)
 			return False
 
 	def makeDiskTable(self):
-		"""Creates the table SampleFiles, this method should not be used often, it is mainly
-		here to define the schema for the table as well as help with debugging."""
+		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
 			self.cursor.execute("CREATE TABLE Disks(LocalPath varchar(500), Machine varchar(100), Working Boolean);")
+			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
-			print("There was an error creating the table: %s" err)
+			print("There was an error creating the table: %s" % err)
 			return False
 
-	def removeDisk(self, path, machine):
+	def removeSample(self, hadoopPath):
+		"""Removes the row from the Disks table corresponding to machine:path and commits the change to the file."""
 		try:
-			self.cursor.execute("DROP * FROM Disks")
+			self.cursor.execute( "DELETE FROM Disks WHERE HadoopPath='%s'" % hadoopPath)
+			self.connection.commit()
+		except sqlite3.OperationalError as err:
+			print("There was an error removing the row: %s" % err)
+
+	def removeDisk(self, path, machine):
+		"""Removes the row from the Disks table corresponding to machine:path and commits the change to the file."""
+		try:
+			self.cursor.execute( "DELETE FROM Disks WHERE LocalPath='%s' AND Machine='%s'" % (path, machine) )
+			self.connection.commit()
+		except sqlite3.OperationalError as err:
+			print("There was an error removing the row: %s" % err)
 
 	def dropSamples(self):
-		self.cursor.execute("DROP * FROM SampleFiles")
-		return self.cursor.fetchall()
+		"""Runs SQL command to drop the SampleFiles table and then commits the change to the DB."""
+		try:
+			self.cursor.execute("DROP TABLE SampleFiles")
+			self.connection.commit()
+			return self.cursor.fetchall()
+		except sqlite3.OperationalError as err:
+			print("There was an error dropping the table: %s" % err )
+			return None
+
+	def dropDisks(self):
+		"""Runs SQL command to drop the Disks table and then commits the change to the DB."""
+		try:
+			self.cursor.execute("DROP TABLE Disks")
+			self.connection.commit()
+			return self.cursor.fetchall()
+		except sqlite3.OperationalError as err:
+			print("There was an error dropping the table: %s" % err )
+			return None
+
+	def addSampleFile(self, sample, localPath, hadoopPath, machine, IOSlotID):
+
+		query = "INSERT INTO SampleFiles VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, hadoopPath, localPath, IOSlotID, machine)
+		
+		try:
+		 	self.cursor.execute(query):
+			return self.cursor.fetchall()
+		except sqlite3.OperationalError as err:
+			print("There was an error adding the sample: %s to the database.\n %s" % (hadoopPath, err))
+			return None
+
+	def addDisk(self, path, machine, working=1):
+		"""Removes the row from the Disks table corresponding to """
+		
+		#Make sure working is Boolean since SQLite doesn't throw an error if you enter any int into a boolean slot.
+		if not working == 1 and not working == 0:
+			print("working must be a boolean argument, aborting insert...")
+			return None
+
+		try:
+			self.cursor.execute( "INSERT INTO Disks VALUES('%s', '%s', '%i') " % (path, machine, working) )
+			self.connection.commit()
+		except sqlite3.OperationalError as err:
+			print("There was an error removing the row: %s" % err)
+
+	def listSamples(self, PRINT_OUT=False):
+		"""Lists unique sample names and the file count in the SampleFiles table"""
+		list_of_samples = a.x("SELECT DISTINCT Sample FROM SampleFiles")
+
+		if PRINT_OUT:
+			for sampleName in list_of_samples:
+				print(sampleName)
+
+		return list_of_samples
+
+	def listDisks(self, SELECT_WORKING=True, PRINT_OUT=False):
+		"Returns a python list of the disks available for storing files. If PRINT_OUT is true, print the list of machine directories with the"
+		
+		command = "SELECT * FROM Disks"
+		if SELECT_WORKING:
+			command+=" WHERE Working=1"
+
+		list_of_dirs = self.x(command)
+
+		if PRINT_OUT:
+			for (machine, path, working) in list_of_dirs:
+				print("%s:%s" % (machine, path))
+
+		return list_of_dirs
+
+
+
