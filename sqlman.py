@@ -72,7 +72,7 @@ class sqlman(object):
 	def makeSampleTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE SampleFiles(Sample varchar(200), HadoopPath varchar(500), LocalPath varchar(500), CondorID varchar(50), Machine varchar(100));")
+			self.cursor.execute("CREATE TABLE SampleFiles(Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100));")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -127,10 +127,10 @@ class sqlman(object):
 
 	def addSampleFile(self, sample, localPath, hadoopPath, machine, IOSlotID):
 
-		query = "INSERT INTO SampleFiles VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, hadoopPath, localPath, IOSlotID, machine)
+		query = "INSERT INTO SampleFiles VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, localPath, hadoopPath, IOSlotID, machine)
 		
 		try:
-		 	self.cursor.execute(query):
+		 	self.cursor.execute(query)
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
 			print("There was an error adding the sample: %s to the database.\n %s" % (hadoopPath, err))
@@ -152,11 +152,13 @@ class sqlman(object):
 
 	def listSamples(self, PRINT_OUT=False):
 		"""Lists unique sample names and the file count in the SampleFiles table"""
-		list_of_samples = a.x("SELECT DISTINCT Sample FROM SampleFiles")
+		list_of_samples = self.x("SELECT Sample, Count(LocalPath) FROM SampleFiles Group By Sample")
 
 		if PRINT_OUT:
-			for sampleName in list_of_samples:
-				print(sampleName)
+			for sampleName, count in list_of_samples:
+				#count = self.x("Count(*) SELECT * from ")
+				print("Sample: %s, Number of Files: %i" % (sampleName, count)) 
+
 
 		return list_of_samples
 
