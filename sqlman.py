@@ -130,7 +130,7 @@ class sqlman(object):
 		query = "INSERT INTO SampleFiles VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, localPath, hadoopPath, IOSlotID, machine)
 		
 		try:
-		 	self.cursor.execute(query)
+			self.cursor.execute(query)
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
 			print("There was an error adding the sample: %s to the database.\n %s" % (hadoopPath, err))
