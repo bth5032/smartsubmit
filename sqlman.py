@@ -68,11 +68,12 @@ class sqlman(object):
 
 		self.dbPath = self.workingDir+newName
 		self.connection=sqlite3.connect(self.dbPath)
+		self.cursor = self.connection.cursor()
 
 	def makeSampleTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE SampleFiles(Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100));")
+			self.cursor.execute("CREATE TABLE SampleFiles(Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Disk);")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -162,7 +163,7 @@ class sqlman(object):
 
 		return list_of_samples
 
-	def listDisks(self, SELECT_WORKING=True, PRINT_OUT=False):
+	def listDisks(self, PRINT_OUT=False, SELECT_WORKING=True):
 		"Returns a python list of the disks available for storing files. If PRINT_OUT is true, print the list of machine directories with the"
 		
 		command = "SELECT * FROM Disks"
@@ -172,7 +173,7 @@ class sqlman(object):
 		list_of_dirs = self.x(command)
 
 		if PRINT_OUT:
-			for (machine, path, working) in list_of_dirs:
+			for (path, machine, working) in list_of_dirs:
 				print("%s:%s" % (machine, path))
 
 		return list_of_dirs

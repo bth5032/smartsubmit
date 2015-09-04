@@ -2,18 +2,21 @@ import sqlman, sqlite3, itertools
 
 
 class DiskRing(object):
-
+	"""Holds the list of disks available for new sample files. The list of directories is ordered by the method getBestDisk, which attempts to spread the sample files over disks and machines as much as possible.""" 
 	def __init__(self, sample, ordered_list):
 		self.sample = sample
 		self.circle = itertools.cycle(ordered_list)
 	
 	def getNext(self):
-		return self.circle.next()
+		"""Return the best location for a new sample file"""
+		return next(self.circle)
 
 	def setName(self, name):
+		"""Changes the sample name, this should only be called by checkIfComputed when it is changing the 'active' sample. If properly used, this should never be called without a setList call as well."""
 		self.sample = name
 
 	def setList(self, ordered_list):
+		"""This method updates the list of directories. It should only be called when the sample has been changed by checkIfComputed."""
 		self.circle = itertools.cycle(ordered_list)
 
 database_file = "test.db"
@@ -44,16 +47,10 @@ def absorbDirectory(dir_path, sample_name):
 	pass
 
 @checkIfComputed
-def computeBestLocationForSample(sample_name):
-	"""Determines the proper location, which is a localpath/machine combination, for the ntuple specified at ntuple_path. If the most recent file was an ntuple
-	The code attempts to minimize the number of samples on the drive, first and foremost."""
-
-	return [4,5,6]
-
-	#Calling sample_name the "active sample" The first time this fucntion is called we generate a list of disks ordered by
-	# 1. number of active samples are on the disk 
-	# 2. the number of total samples 
-	# 3. the number of active samples on the machine 
-	# 4. the number of total samples on the machine
-	#
-	# in subsequent calls we instead return the next item on the list
+def getBestDisk(sample_name):
+	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
+	
+	1. the number of active samples on the disk 
+	2. the number of total samples on the disk
+	3. the number of active samples on the machine 
+	4. the number of total samples on the machine"""

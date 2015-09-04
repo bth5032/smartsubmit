@@ -55,3 +55,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Backup SQLite Databases
+*.db.bak
