@@ -73,7 +73,7 @@ class sqlman(object):
 	def makeSampleTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE SampleFiles(Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Disk);")
+			self.cursor.execute("CREATE TABLE SampleFiles(Sample_ID INTEGER PRIMARY KEY AUTOINCREMENT, Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Disk);")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -83,7 +83,7 @@ class sqlman(object):
 	def makeDiskTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE Disks(LocalPath varchar(500), Machine varchar(100), Working Boolean);")
+			self.cursor.execute("CREATE TABLE Disks(Disk_ID INTEGER PRIMARY KEY AUTOINCREMENT, LocalPath varchar(500), Machine varchar(100), Working Boolean);")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -146,7 +146,7 @@ class sqlman(object):
 			return None
 
 		try:
-			self.cursor.execute( "INSERT INTO Disks VALUES('%s', '%s', '%i') " % (path, machine, working) )
+			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, Working) VALUES('%s', '%s', '%i') " % (path, machine, working) )
 			self.connection.commit()
 		except sqlite3.OperationalError as err:
 			print("There was an error removing the row: %s" % err)
