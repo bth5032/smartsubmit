@@ -31,7 +31,8 @@ class sqlman(object):
 
 	def __getitem__(self, key):
 		try:
-			print(self.x("Select * From %s" % key))
+			output = self.x("Select * From %s" % key)
+			return output
 		except sqlite3.OperationalError as err:
 			print("%s does not exist as a table" % key)
 
@@ -80,7 +81,7 @@ class sqlman(object):
 	def makeSampleTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE SampleFiles(Sample_ID INTEGER PRIMARY KEY AUTOINCREMENT, Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Disk);")
+			self.cursor.execute("CREATE TABLE SampleFiles(Sample_ID INTEGER PRIMARY KEY AUTOINCREMENT, Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Foreign Key Disk_ID references Disks(Disk_ID));")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -135,7 +136,7 @@ class sqlman(object):
 
 	def addSampleFile(self, sample, localPath, hadoopPath, machine, IOSlotID):
 
-		query = "INSERT INTO SampleFiles VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, localPath, hadoopPath, IOSlotID, machine)
+		query = "INSERT INTO SampleFiles('FILL IN HERE ASAP') VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, localPath, hadoopPath, IOSlotID, machine)
 		
 		try:
 			self.cursor.execute(query)
@@ -156,7 +157,7 @@ class sqlman(object):
 			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, Working) VALUES('%s', '%s', '%i') " % (path, machine, working) )
 			self.connection.commit()
 		except sqlite3.OperationalError as err:
-			print("There was an error removing the row: %s" % err)
+			print("There was an error adding the row: %s" % err)
 
 	def listSamples(self, PRINT_OUT=False):
 		"""Lists unique sample names and the file count in the SampleFiles table"""
