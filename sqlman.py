@@ -29,6 +29,12 @@ class sqlman(object):
 		output = "List of Tables: %s" % tableNames
 		return output
 
+	def __getitem__(self, key):
+		try:
+			print(self.x("Select * From %s" % key))
+		except sqlite3.OperationalError as err:
+			print("%s does not exist as a table" % key)
+
 	def absorbDir(self, hadoopPath):
 		
 		if not hadoopPath[-1:] == '/': #add trailing / to path if needed
@@ -56,7 +62,8 @@ class sqlman(object):
 			return self.cursor.fetchall()
 
 		except sqlite3.OperationalError as err:
-			print("The command: %s could not be executed. \n Caught error: %s" % (SQLCommand, err))
+			print("The command: %s could not be executed. \nCaught error: %s" % (SQLCommand, err))
+			raise err
 
 	def makeNewDatabase(self):
 		"""This method creates a connection to a new sqlite3 database, named based on the time it was created. The old database file is not effected in any way, but will no longer be used to manage the files."""
