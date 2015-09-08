@@ -36,6 +36,8 @@ class sqlman(object):
 		except sqlite3.OperationalError as err:
 			print("%s does not exist as a table" % key)
 
+	def __del__(self, key):
+
 	def absorbDir(self, hadoopPath):
 		
 		if not hadoopPath[-1:] == '/': #add trailing / to path if needed
@@ -91,7 +93,7 @@ class sqlman(object):
 	def makeDiskTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE Disks(Disk_ID INTEGER PRIMARY KEY AUTOINCREMENT, LocalPath varchar(500), Machine varchar(100), Working Boolean);")
+			self.cursor.execute("CREATE TABLE Disks(Disk_ID INTEGER PRIMARY KEY AUTOINCREMENT, LocalPath varchar(500), Machine varchar(100), CondorID varchar(25), Working Boolean);")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -134,9 +136,10 @@ class sqlman(object):
 			print("There was an error dropping the table: %s" % err )
 			return None
 
-	def addSampleFile(self, sample, localPath, hadoopPath, machine, IOSlotID):
+	def addSampleFile(self, sample, localPath, hadoopPath, machine, condorID):
+		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the location of the file on the IOSlot slave, hadoopPath is the location of the file in Hadoop, machine is the domain name of the slave, and condorID is the condor identifier for the slot associated with the disk."""
 
-		query = "INSERT INTO SampleFiles('FILL IN HERE ASAP') VALUES('%s', '%s', '%s', '%s', '%s')" % (sample, localPath, hadoopPath, IOSlotID, machine)
+		query = "INSERT INTO SampleFiles(Sample, LocalPath, HadoopPath, CondorID, Machine, Disk_ID) VALUES('%s', '%s', '%s', '%s', '%s', (SELECT Disk_ID FROM Disks WHERE Condor_ID='%s'))" % (sample, localPath, hadoopPath, condorID, machine, condorID)
 		
 		try:
 			self.cursor.execute(query)
@@ -145,7 +148,7 @@ class sqlman(object):
 			print("There was an error adding the sample: %s to the database.\n %s" % (hadoopPath, err))
 			return None
 
-	def addDisk(self, path, machine, working=1):
+	def addDisk(self, path, machine, condorID, working=1):
 		"""Removes the row from the Disks table corresponding to """
 		
 		#Make sure working is Boolean since SQLite doesn't throw an error if you enter any int into a boolean slot.
@@ -154,7 +157,7 @@ class sqlman(object):
 			return None
 
 		try:
-			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, Working) VALUES('%s', '%s', '%i') " % (path, machine, working) )
+			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, CondorID, Working) VALUES('%s', '%s', '%s', '%i') " % (path, machine, condorID, working) )
 			self.connection.commit()
 		except sqlite3.OperationalError as err:
 			print("There was an error adding the row: %s" % err)
