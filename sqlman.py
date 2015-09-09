@@ -36,8 +36,6 @@ class sqlman(object):
 		except sqlite3.OperationalError as err:
 			print("%s does not exist as a table" % key)
 
-	def __del__(self, key):
-
 	def absorbDir(self, hadoopPath):
 		
 		if not hadoopPath[-1:] == '/': #add trailing / to path if needed
