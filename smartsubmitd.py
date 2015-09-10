@@ -38,12 +38,16 @@ def checkIfComputed(function):
 
 	return return_func
 
+def absorbSampleFile(sample_name, file_path):
+	"""Takes in a sample file and the name of the sample, computes the best location for that file using getBestDisk(), issues a command to move the file to the machine, then adds the file to the table."""
+
 def absorbDirectory(dir_path, sample_name):
-	"""	for each root file in dir_path, 
-	 	
-		1. compute the proper location (machine, LocalPath combination) for the file
-		2. move the file to the proper location
-		3. absorb each file into the sql database. """
+	"""For each root file in dir_path,
+ 	
+ 	1. check if file is already in database
+	2. compute the proper location (machine, LocalPath combination) for the file
+	3. move the file to the proper location
+	4. absorb each file into the sql database. """
 	pass
 
 @checkIfComputed

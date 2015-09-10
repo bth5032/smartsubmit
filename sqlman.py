@@ -4,7 +4,7 @@ import os, time
 class sqlman(object):
 	"""SQLite Database Manager: A class which is meant to be a front end to the database for smartsubmit. The manager handles two tables. First, SampleFiles, which stores information on where the sample files are stored. Second, Disks, which stores information about which disks are available for storing the sample files."""
 
-	def __new__(self, connection, databasePath, workingDir):
+	def __new__(self, connection, databasePath, workingDir='.'):
 		"""This method makes sure we're sent a valid connection before we construct the object"""
 		if isinstance(connection, sqlite3.Connection):
 			return super(sqlman, self).__new__(self)
@@ -12,7 +12,7 @@ class sqlman(object):
 			print("You have not provided a valid sqlite3 connection, construction of object aborted.")
 			return None
 
-	def __init__(self, connection, databasePath, workingDir):
+	def __init__(self, connection, databasePath, workingDir='.'):
 		self.connection=connection
 		self.cursor = connection.cursor()
 		self.dbpath = databasePath
@@ -32,7 +32,7 @@ class sqlman(object):
 	def __getitem__(self, key):
 		try:
 			output = self.x("Select * From %s" % key)
-			return output
+			return [list(row) for row in output]
 		except sqlite3.OperationalError as err:
 			print("%s does not exist as a table" % key)
 
@@ -56,7 +56,7 @@ class sqlman(object):
 			#Move each file to new locations. 
 
 	def x(self, SQLCommand):
-		"""proxy to self.cursor.execute(SQLCommand), returns the output of self.cursor.fetchall() on success, None on failure."""
+		"""Proxy to self.cursor.execute(SQLCommand), returns the output of self.cursor.fetchall() on success, None on failure. This method runs a sqlf.connection.commit() after executing the command, so don't use it to make changes to the database unless you want them written to disk."""
 		try:
 			self.cursor.execute(SQLCommand)
 			self.connection.commit()
@@ -78,10 +78,13 @@ class sqlman(object):
 		self.connection=sqlite3.connect(self.dbPath)
 		self.cursor = self.connection.cursor()
 
+		self.makeSampleTable()
+		self.makeDiskTable()
+
 	def makeSampleTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE SampleFiles(Sample_ID INTEGER PRIMARY KEY AUTOINCREMENT, Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Foreign Key Disk_ID references Disks(Disk_ID));")
+			self.cursor.execute("CREATE TABLE SampleFiles(Sample_ID INTEGER PRIMARY KEY AUTOINCREMENT, Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Disk_ID INTEGER, Foreign Key (Disk_ID) references Disks(Disk_ID));")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -147,8 +150,11 @@ class sqlman(object):
 			return None
 
 	def addDisk(self, path, machine, condorID, working=1):
-		"""Removes the row from the Disks table corresponding to """
+		"""Adds disk to the Disks table"""
 		
+		if not path[-1:] == '/': #add trailing / to path if needed
+			path+='/'
+
 		#Make sure working is Boolean since SQLite doesn't throw an error if you enter any int into a boolean slot.
 		if not working == 1 and not working == 0:
 			print("working must be a boolean argument, aborting insert...")
