@@ -28,6 +28,7 @@ man = sqlman.sqlman(connection, database_file, working_dir)
 def checkIfComputed(function):
 	disks = DiskRing("A", [1,2,3])
 	def return_func(sample_name):
+		"""Checks if the sample_name was the last sample used, if so, it just returns the next drive on the list. Otherwise, construct a new list and then return the first drive"""
 		if disks.sample == sample_name:
 			return disks.getNext()
 
@@ -47,14 +48,18 @@ def absorbDirectory(dir_path, sample_name):
  	1. check if file is already in database
 	2. compute the proper location (machine, LocalPath combination) for the file
 	3. move the file to the proper location
-	4. absorb each file into the sql database. """
+	4. absorb each file into the sql database."""
 	pass
 
 @checkIfComputed
 def getBestDisk(sample_name):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
 	
-	1. the number of active samples on the disk 
+	1. the number of active samples on the disk
 	2. the number of total samples on the disk
-	3. the number of active samples on the machine 
+	3. the number of active samples on the machine
 	4. the number of total samples on the machine"""
+
+
+	return man.x("Select * From Disks")
+	

@@ -84,7 +84,21 @@ class sqlman(object):
 	def makeSampleTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE SampleFiles(Sample_ID INTEGER PRIMARY KEY AUTOINCREMENT, Sample varchar(200), LocalPath varchar(500), HadoopPath varchar(500), CondorID varchar(50), Machine varchar(100), Disk_ID INTEGER, Foreign Key (Disk_ID) references Disks(Disk_ID));")
+			self.cursor.execute("""CREATE TABLE SampleFiles (
+								    Sample_ID      INTEGER       PRIMARY KEY AUTOINCREMENT,
+								    Sample         VARCHAR (200) NOT NULL,
+								    LocalDirectory VARCHAR (500),
+								    FileName       VARCHAR (100) NOT NULL,
+								    HadoopPath     VARCHAR (500) NOT NULL,
+								    CondorID       VARCHAR (50),
+								    Machine        VARCHAR (100),
+								    Disk_ID        INTEGER,
+								    FOREIGN KEY (
+								        Disk_ID
+								    )
+								    REFERENCES Disks (Disk_ID) 
+								);""")
+
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -94,7 +108,13 @@ class sqlman(object):
 	def makeDiskTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("CREATE TABLE Disks(Disk_ID INTEGER PRIMARY KEY AUTOINCREMENT, LocalPath varchar(500), Machine varchar(100), CondorID varchar(25), Working Boolean);")
+			self.cursor.execute("""CREATE TABLE Disks (
+								    Disk_ID   INTEGER       PRIMARY KEY AUTOINCREMENT,
+								    LocalPath VARCHAR (500) NOT NULL,
+								    Machine   VARCHAR (100) NOT NULL,
+								    CondorID  VARCHAR (25),
+								    Working   BOOLEAN
+								);""")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -137,10 +157,10 @@ class sqlman(object):
 			print("There was an error dropping the table: %s" % err )
 			return None
 
-	def addSampleFile(self, sample, localPath, hadoopPath, machine, condorID):
+	def addSampleFile(self, sample, localPath, hadoopDirectory, filename, machine):
 		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the location of the file on the IOSlot slave, hadoopPath is the location of the file in Hadoop, machine is the domain name of the slave, and condorID is the condor identifier for the slot associated with the disk."""
 
-		query = "INSERT INTO SampleFiles(Sample, LocalPath, HadoopPath, CondorID, Machine, Disk_ID) VALUES('%s', '%s', '%s', '%s', '%s', (SELECT Disk_ID FROM Disks WHERE Condor_ID='%s'))" % (sample, localPath, hadoopPath, condorID, machine, condorID)
+		query = "INSERT INTO SampleFiles(Sample, LocalDirectory, HadoopPath, Filename, CondorID, Machine, Disk_ID) VALUES('%s', '%s', '%s', '%s', '%s', '%s', (SELECT Disk_ID FROM Disks WHERE Machine='%s' And LocalPath='%s'))" % (sample, localPath, hadoopDirectory, filename, machine, localPath)
 		
 		try:
 			self.cursor.execute(query)
@@ -193,5 +213,6 @@ class sqlman(object):
 
 		return list_of_dirs
 
-
+	def getDict(self):
+		return {"Disks":self.__getitem__("Disks"), "SampleFiles":self.__getitem__("SampleFiles")}
 
