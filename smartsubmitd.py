@@ -56,10 +56,51 @@ def getBestDisk(sample_name):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
 	
 	1. the number of active samples on the disk
-	2. the number of total samples on the disk
-	3. the number of active samples on the machine
-	4. the number of total samples on the machine"""
+	2. the number of total samples on the disk"""
 
+	query = """Select 
+					O.num_same, 
+					Count(SampleFiles.Sample_ID) AS num_total,
+					O.CondorID,
+					O.Machine,
+					O.LocalDirectory
+				From 
+					(SELECT 
+						Count(Distinct S.Sample_ID) AS num_same,
+						Disks.CondorID,
+						Disks.Machine,
+						Disks.LocalDirectory
+					FROM 
+						Disks
+					LEFT JOIN 
+						(SELECT 
+							* 
+						FROM 
+							SampleFiles 
+						WHERE 
+							SampleFiles.Sample="%s") as S
+					ON	
+						S.Disk_ID=Disks.Disk_ID 
+					GROUP BY
+						Disks.Disk_ID
+					ORDER BY 
+						Count(S.Sample_ID) ASC) 
+					AS O
+				LEFT JOIN 
+					SampleFiles 
+				ON 
+					SampleFiles.CondorID = O.CondorID 
+				GROUP BY 
+					O.CondorID 
+				ORDER BY 
+					num_same, 
+					num_total ASC;""" % sample_name
 
-	return man.x("Select * From Disks")
+	#The query above returns a list of the form 
+	# [Number of Active Sample Files on The Disk, Total Number of Sample Files on the Disk, Condor ID for Disk, Machine Address, Directory on Machine Disk is Mounted]]
+
+	output = man.x(query)
 	
+	#Return list of lists: [Condor ID, SSH Location ("Address:Directory")]
+
+	return [ [x[2], str(x[3])+':'+str(x[4])] for x in output ]
