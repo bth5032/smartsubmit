@@ -87,12 +87,12 @@ class sqlman(object):
 			self.cursor.execute("""CREATE TABLE SampleFiles (
 								    Sample_ID      INTEGER       PRIMARY KEY AUTOINCREMENT,
 								    Sample         VARCHAR (200) NOT NULL,
-								    LocalDirectory VARCHAR (500),
+								    LocalDirectory VARCHAR (500 NOT NULL,
 								    FileName       VARCHAR (100) NOT NULL,
 								    HadoopPath     VARCHAR (500) NOT NULL,
-								    CondorID       VARCHAR (50),
-								    Machine        VARCHAR (100),
-								    Disk_ID        INTEGER,
+								    CondorID       VARCHAR (50) NOT NULL,
+								    Machine        VARCHAR (100) NOT NULL,
+								    Disk_ID        INTEGER NOT NULL,
 								    FOREIGN KEY (
 								        Disk_ID
 								    )
@@ -110,9 +110,9 @@ class sqlman(object):
 		try:
 			self.cursor.execute("""CREATE TABLE Disks (
 								    Disk_ID   INTEGER       PRIMARY KEY AUTOINCREMENT,
-								    LocalPath VARCHAR (500) NOT NULL,
+								    LocalDirectory VARCHAR (500) NOT NULL,
 								    Machine   VARCHAR (100) NOT NULL,
-								    CondorID  VARCHAR (25),
+								    CondorID  VARCHAR (25) NOT NULL,
 								    Working   BOOLEAN
 								);""")
 			self.connection.commit()
@@ -157,16 +157,23 @@ class sqlman(object):
 			print("There was an error dropping the table: %s" % err )
 			return None
 
-	def addSampleFile(self, sample, localPath, hadoopDirectory, filename, machine):
-		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the location of the file on the IOSlot slave, hadoopPath is the location of the file in Hadoop, machine is the domain name of the slave, and condorID is the condor identifier for the slot associated with the disk."""
+	def addSampleFile(self, sample, filename, localPath, hadoopDirectory, machine):
+		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the folder containing the file on the IOSlot slave, hadoopDirectory is the location of the file in Hadoop, machine is the domain name of the slave, and condorID is the condor identifier for the slot associated with the disk."""
+		
+		if not localPath[-1:] == '/': #add trailing / to path if needed
+			localPath+='/'
+		if not hadoopDirectory[-1:] == '/': #add trailing / to path if needed
+			hadoopDirectory+='/'
 
-		query = "INSERT INTO SampleFiles(Sample, LocalDirectory, HadoopPath, Filename, CondorID, Machine, Disk_ID) VALUES('%s', '%s', '%s', '%s', '%s', '%s', (SELECT Disk_ID FROM Disks WHERE Machine='%s' And LocalPath='%s'))" % (sample, localPath, hadoopDirectory, filename, machine, localPath)
+
+		query = """INSERT INTO 
+				SampleFiles(Sample, LocalDirectory, HadoopPath, Filename, CondorID, Machine, Disk_ID) 
+				VALUES('%s', '%s', '%s', '%s', (SELECT CondorID FROM Disks WHERE Machine='%s' AND LocalDirectory='%s'), '%s', (SELECT Disk_ID FROM Disks WHERE Machine='%s' And LocalDirectory='%s'))""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, localPath, machine, machine, localPath)
 		
 		try:
-			self.cursor.execute(query)
-			return self.cursor.fetchall()
+			return self.x(query)
 		except sqlite3.OperationalError as err:
-			print("There was an error adding the sample: %s to the database.\n %s" % (hadoopPath, err))
+			print("There was an error adding the sample: %s to the database.\n %s" % (hadoopDirectory, err))
 			return None
 
 	def addDisk(self, path, machine, condorID, working=1):

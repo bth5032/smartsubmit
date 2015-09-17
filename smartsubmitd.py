@@ -1,5 +1,5 @@
-import sqlman, sqlite3, itertools
-
+import sqlman, sqlite3, itertools, os
+from exceptions import RsyncError
 
 class DiskRing(object):
 	"""Holds the list of disks available for new sample files. The list of directories is ordered by the method getBestDisk, which attempts to spread the sample files over disks and machines as much as possible.""" 
@@ -39,8 +39,51 @@ def checkIfComputed(function):
 
 	return return_func
 
-def absorbSampleFile(sample_name, file_path):
-	"""Takes in a sample file and the name of the sample, computes the best location for that file using getBestDisk(), issues a command to move the file to the machine, then adds the file to the table."""
+
+def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDirectory = None):
+	"""Takes in the hadoop path for a sample file and the sample name, computes the best location for that file using getBestDisk(), then issues a command to move the file to the machine and adds the file to the table. Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
+
+	hadoop_dir = os.path.dirname(hadoop_path_to_file)
+
+	if not hadoop_dir[-1:] == '/': #add trailing / to path if needed
+		hadoop_dir+='/'
+
+	filename = os.path.basename(hadoop_path_to_file)
+
+	#Check if there is whitespace in the sample_name, this will cause errors with the scheme of putting sample files into /BASEDIR/sample_name
+
+	if ' ' in sample_name:
+		print("There can not be a space in the sample name")
+		return False
+ 
+	#Check if the record is already in the table. Having the same sample file twice will cause issues when we try to run the analysis on every file in a sample 
+
+	row = man.x("SELECT * FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))
+
+	if len(row): #row[0] should be the only record if any is returned
+		print("This sample file is already in the database, deleting the old record")
+		man.x("DELETE FROM SampleFiles WHERE Sample_ID = '%i';" % row[0][0])
+
+
+	locationData = getBestDisk(sample_name)
+
+	if Machine == None:
+		Machine = locationData["Machine"]
+
+	if LocalDirectory == None:
+		LocalDirectory = locationData["LocalDirectory"]
+	
+	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
+
+	ssh_syntax = "ssh %s -t rsync %s %s" % (Machine, hadoop_path_to_file, sample_dir)
+
+	exit_code = os.system(ssh_syntax)
+
+	if exit_code == 0:
+		man.addSampleFile(sample_name, os.path.basename(hadoop_path_to_file), LocalDirectory, os.path.dirname(hadoop_path_to_file), Machine)
+		return True	
+	else:
+		raise RsyncError(exit_code)
 
 def absorbDirectory(dir_path, sample_name):
 	"""For each root file in dir_path,
@@ -101,6 +144,8 @@ def getBestDisk(sample_name):
 
 	output = man.x(query)
 	
-	#Return list of lists: [Condor ID, SSH Location ("Address:Directory")]
+	#Return list of lists: [Condor ID, Machine, Local Directory]
 
-	return [ [x[2], str(x[3])+':'+str(x[4])] for x in output ]
+	return [ {"CondorID": x[2], "Machine" : str(x[3]), "LocalDirectory" :str(x[4])} for x in output ]
+
+
