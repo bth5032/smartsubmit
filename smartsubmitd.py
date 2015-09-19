@@ -148,4 +148,9 @@ def getBestDisk(sample_name):
 
 	return [ {"CondorID": x[2], "Machine" : str(x[3]), "LocalDirectory" :str(x[4])} for x in output ]
 
-
+def populateFromDisks():
+	"""Remakes the SampleFiles table by indexing the files in Disks table. The method assumes that files for sample "SampleName" are in agreement with the convention being located in LocalDirectory/SampleName/"""
+	for rec in man["Disks"]:
+		ssh_syntax="ssh %s -t ls -R %s" % (rec[2], rec[1])
+		out = os.system(ssh_syntax)
+		print("output: %s" % out)
