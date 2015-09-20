@@ -1,6 +1,8 @@
 import sqlman, sqlite3, itertools, os
 from exceptions import RsyncError
 
+
+
 class DiskRing(object):
 	"""Holds the list of disks available for new sample files. The list of directories is ordered by the method getBestDisk, which attempts to spread the sample files over disks and machines as much as possible.""" 
 	def __init__(self, sample, ordered_list):
