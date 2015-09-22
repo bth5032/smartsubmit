@@ -43,7 +43,7 @@ def checkIfComputed(function):
 
 
 def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDirectory = None):
-	"""Takes in the hadoop path for a sample file and the sample name, computes the best location for that file using getBestDisk(), then issues a command to move the file to the machine and adds the file to the table. Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
+	"""Takes in the hadoop path for a sample file and the sample name, computes the best location for that file using getBestDisk(), then issues a command to move the file to the machine and adds the file to the table. If the file already has a record in SampleFiles, the previous record is deleted, though the file will remain. Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
 
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)
 
