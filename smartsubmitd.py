@@ -1,4 +1,4 @@
-import sqlman, sqlite3, itertools, os
+import sqlman, sqlite3, itertools, os, subprocess
 from exceptions import RsyncError
 
 
@@ -77,10 +77,25 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 	
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 
-	ssh_syntax = "ssh %s -t rsync %s %s" % (Machine, hadoop_path_to_file, sample_dir)
+	ssh_syntax = "ssh %s rsync --progress %s %s" % (Machine, hadoop_path_to_file, sample_dir)
+	
+	p = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, shell=True)
+	
+	while p.poll() is None:
+		line = p.stdout.readline()
+		print(line)
 
-	exit_code = os.system(ssh_syntax)
+	print(p.stdout.read())
+	exit_code = p.returncode
+	
+	'''try:
+		print(subprocess.check_output(ssh_syntax, shell=True))
+		exit_code = 0
+	except subprocess.CalledProcessError as err:
+		exit_code = err.returncode
 
+	#exit_code = int (exit_code/256)
+'''
 	if exit_code == 0:
 		man.addSampleFile(sample_name, os.path.basename(hadoop_path_to_file), LocalDirectory, os.path.dirname(hadoop_path_to_file), Machine)
 		return True	
