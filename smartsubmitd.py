@@ -85,15 +85,17 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 
 
 	locationData = getBestDisk(sample_name) 
-
-	Machine = locationData["Machine"] if Machine == None
-
-	LocalDirectory = locationData["LocalDirectory"] if LocalDirectory == None
+	
+	if Machine == None:
+		Machine = locationData["Machine"]
+	if LocalDirectory == None:	
+		LocalDirectory = locationData["LocalDirectory"]
 	
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 
 	if moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine)
+ 
 
 def absorbDirectory(dir_path, sample_name):
 	"""For each root file in dir_path,
