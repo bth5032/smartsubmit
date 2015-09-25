@@ -1,4 +1,4 @@
-import sqlman, sqlite3, itertools, os, subprocess
+import sqlman, sqlite3, itertools, os, subprocess, sys
 from exceptions import RsyncError
 
 
@@ -41,10 +41,27 @@ def checkIfComputed(function):
 
 	return return_func
 
+def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
+	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an rsync command."""
+	
+	ssh_syntax = "ssh %s rsync --progress %s %s " % (Machine, hadoop_path_to_file, sample_dir)
+
+	rsync = subprocess.Popen(ssh_syntax, stdout=sys.stdout, stderr=sys.stderr, shell=True)
+	
+	rsync.wait()
+
+	exit_code = rsync.returncode
+
+	if exit_code == 0:
+		return True	
+	else: 
+		raise RsyncError(exit_code)
+		return False
 
 def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDirectory = None):
 	"""Takes in the hadoop path for a sample file and the sample name, computes the best location for that file using getBestDisk(), then issues a command to move the file to the machine and adds the file to the table. If the file already has a record in SampleFiles, the previous record is deleted, though the file will remain. Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
 
+	#Extract the directory and filename from hadoop_path_to_file
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)
 
 	if not hadoop_dir[-1:] == '/': #add trailing / to path if needed
@@ -67,40 +84,16 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 		man.x("DELETE FROM SampleFiles WHERE Sample_ID = '%i';" % row[0][0])
 
 
-	locationData = getBestDisk(sample_name)
+	locationData = getBestDisk(sample_name) 
 
-	if Machine == None:
-		Machine = locationData["Machine"]
+	Machine = locationData["Machine"] if Machine == None
 
-	if LocalDirectory == None:
-		LocalDirectory = locationData["LocalDirectory"]
+	LocalDirectory = locationData["LocalDirectory"] if LocalDirectory == None
 	
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 
-	ssh_syntax = "ssh %s rsync --progress %s %s" % (Machine, hadoop_path_to_file, sample_dir)
-	
-	p = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, shell=True)
-	
-	while p.poll() is None:
-		line = p.stdout.readline()
-		print(line)
-
-	print(p.stdout.read())
-	exit_code = p.returncode
-	
-	'''try:
-		print(subprocess.check_output(ssh_syntax, shell=True))
-		exit_code = 0
-	except subprocess.CalledProcessError as err:
-		exit_code = err.returncode
-
-	#exit_code = int (exit_code/256)
-'''
-	if exit_code == 0:
-		man.addSampleFile(sample_name, os.path.basename(hadoop_path_to_file), LocalDirectory, os.path.dirname(hadoop_path_to_file), Machine)
-		return True	
-	else:
-		raise RsyncError(exit_code)
+	if moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
+		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine)
 
 def absorbDirectory(dir_path, sample_name):
 	"""For each root file in dir_path,
@@ -109,7 +102,13 @@ def absorbDirectory(dir_path, sample_name):
 	2. compute the proper location (machine, LocalPath combination) for the file
 	3. move the file to the proper location
 	4. absorb each file into the sql database."""
-	pass
+	if not dir_path[:-1] == '/':
+		dir_path += '/'
+
+	for filename in os.listdir(dir_path):
+		if filename[:-5] == ".root":
+			print(dir_path+filename)
+
 
 @checkIfComputed
 def getBestDisk(sample_name):

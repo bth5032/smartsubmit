@@ -28,4 +28,7 @@ class RsyncError(BaseException):
 		self.exit_code = exit_code
 
 	def __repr__(self):
-		return "Exit code: %i \n %s" % (self.exit_code, self.error)
+		return "Exit code: %i \nWith Error: %s" % (self.exit_code, self.error)
+
+	def __str__(self):
+		return self.__repr__()
