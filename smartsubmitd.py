@@ -1,5 +1,5 @@
 import sqlman, sqlite3, itertools, os, subprocess, sys
-from exceptions import RsyncError
+from custom_errors import RsyncError
 
 
 
