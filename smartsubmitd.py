@@ -58,6 +58,18 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 		raise RsyncError(exit_code)
 		return False
 
+def sampleInTable(hadoop_path_to_file, DELETE=False):
+	"""Returns True if the sample file at the hadoop path is already in the table, False otherwise. If DELETE is True, it will also delete the record, but not the sample on disk. """
+
+	row = man.x("SELECT * FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))
+
+	if len(row): #row[0] should be the only record if any is returned
+		if DELETE:
+			man.x("DELETE FROM SampleFiles WHERE Sample_ID = '%i';" % row[0][0])
+		return True
+
+	return False
+
 def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDirectory = None):
 	"""Takes in the hadoop path for a sample file and the sample name, computes the best location for that file using getBestDisk(), then issues a command to move the file to the machine and adds the file to the table. If the file already has a record in SampleFiles, the previous record is deleted, though the file will remain. Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
 
@@ -77,12 +89,8 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
  
 	#Check if the record is already in the table. Having the same sample file twice will cause issues when we try to run the analysis on every file in a sample 
 
-	row = man.x("SELECT * FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))
-
-	if len(row): #row[0] should be the only record if any is returned
-		print("This sample file is already in the database, deleting the old record")
-		man.x("DELETE FROM SampleFiles WHERE Sample_ID = '%i';" % row[0][0])
-
+	if sampleInTable(hadoop_path_to_file, True):
+		print("This sample file is already in the database, the old record was deleted")
 
 	locationData = getBestDisk(sample_name) 
 	
@@ -97,21 +105,20 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine)
  
 
-def absorbDirectory(dir_path, sample_name):
-	"""For each root file in dir_path,
- 	
- 	1. check if file is already in database
-	2. compute the proper location (machine, LocalPath combination) for the file
-	3. move the file to the proper location
-	4. absorb each file into the sql database."""
+def absorbDirectory(dir_path, sample_name, NO_OVERWRITE=True):
+	"""Calls absorbSampleFile for each root file in directory. If NO_OVERWRITE is true, files already in the table are skipped"""
+
 	if not dir_path[:-1] == '/':
 		dir_path += '/'
 
 	for filename in os.listdir(dir_path):
 		if filename[-5:] == ".root":
 			hadoop_path_to_file=dir_path+filename
-			absorbSampleFile(sample_name, hadoop_path_to_file)
-
+			if(not NO_OVERWRITE):
+				absorbSampleFile(sample_name, hadoop_path_to_file)
+			else:
+				if not sampleInTable(hadoop_path_to_file):
+					absorbSampleFile(sample_name, hadoop_path_to_file)
 
 @checkIfComputed
 def getBestDisk(sample_name):
