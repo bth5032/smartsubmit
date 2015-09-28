@@ -109,7 +109,8 @@ def absorbDirectory(dir_path, sample_name):
 
 	for filename in os.listdir(dir_path):
 		if filename[-5:] == ".root":
-			print(dir_path+filename)
+			hadoop_path_to_file=dir_path+filename
+			absorbSampleFile(sample_name, hadoop_path_to_file)
 
 
 @checkIfComputed
