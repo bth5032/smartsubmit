@@ -108,7 +108,7 @@ def absorbDirectory(dir_path, sample_name):
 		dir_path += '/'
 
 	for filename in os.listdir(dir_path):
-		if filename[:-5] == ".root":
+		if filename[-5:] == ".root":
 			print(dir_path+filename)
 
 
