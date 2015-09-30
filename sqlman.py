@@ -36,25 +36,6 @@ class sqlman(object):
 		except sqlite3.OperationalError as err:
 			print("%s does not exist as a table" % key)
 
-	def absorbDir(self, hadoopPath):
-		
-		if not hadoopPath[-1:] == '/': #add trailing / to path if needed
-			hadoopPath+='/'
-
-		try: #Read the directory
-			fileList = os.listdir(hadoopPath) 
-		except FileNotFoundError:
-			print("Could not open directory %s, check that the path is typed correctly." % hadoopPath)
-
-
-		#Construct list of samples that have ".root" in their name
-		toBeAbsorbed=[sampleName for sampleName in fileList if ".root" in sampleName]
-		
-		print("Here's the list of samples that will go in the database")
-		for infile in toBeAbsorbed:
-			pass
-			#Move each file to new locations. 
-
 	def x(self, SQLCommand):
 		"""Proxy to self.cursor.execute(SQLCommand), returns the output of self.cursor.fetchall() on success, None on failure. This method runs a sqlf.connection.commit() after executing the command, so don't use it to make changes to the database unless you want them written to disk."""
 		try:
