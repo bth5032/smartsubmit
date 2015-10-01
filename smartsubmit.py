@@ -1,4 +1,4 @@
-import sqlman, sqlite3, itertools, os, subprocess, sys, zmq
+import sqlman, sqlite3, itertools, os, subprocess, sys
 from custom_errors import RsyncError
 
 
@@ -41,6 +41,16 @@ def checkIfComputed(function):
 
 	return return_func
 
+def checkUniqueList(function):
+	def return_func(list_of_samples):
+		"""Checks that the list is unique and then calls getMachineIDs. Otherwise returns False"""
+		if len(set(list_of_samples)) == len(list_of_samples):
+			return function(list_of_samples)
+		else:
+			return False
+
+	return return_func
+
 def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an rsync command."""
 	
@@ -58,28 +68,42 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 		raise RsyncError(exit_code)
 		return False
 
-def sampleInTable(hadoop_path_to_file, DELETE=False):
-	"""Returns True if the sample file at the hadoop path is already in the table, False otherwise. If DELETE is True, it will also delete the record, but not the sample on disk. """
+def sampleInTable(hadoop_path_to_file, sample_name):
+	"""
+	Returns: 
+	0: 	if the sample file at the hadoop path is not in the table, 
+	
+	1: 	if the sample file is already in the table under the sample specified by 'sample_name', 
 
-	row = man.x("SELECT * FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))
+	<sample_name in table>: if the sample file is in the table, but under a different sample name."""
 
+	hadoop_dir = os.path.dirname(hadoop_path_to_file)
+	hadoop_dir += '/' #add trailing / to path
+	filename = os.path.basename(hadoop_path_to_file)
+
+	row = man.x("SELECT Sample FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))
+	print(row)
 	if len(row): #row[0] should be the only record if any is returned
-		if DELETE:
-			man.x("DELETE FROM SampleFiles WHERE Sample_ID = '%i';" % row[0][0])
-		return True
-
-	return False
+		if row[0][0] == sample_name:
+			return 1
+		else:
+			return row[0][0]
+	return 0
 
 def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDirectory = None):
-	"""Takes in the hadoop path for a sample file and the sample name, computes the best location for that file using getBestDisk(), then issues a command to move the file to the machine and adds the file to the table. If the file already has a record in SampleFiles, the previous record is deleted, though the file will remain. Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
+	"""
+	1. Checks that the sample file is not already in the table
+
+	2. Computes the best location for that file using getBestDisk()
+	
+	3. issues a command to move the file to the machine and adds the file to the table. 
+	
+	Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
 
 	#Extract the directory and filename from hadoop_path_to_file
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)
-
-	if not hadoop_dir[-1:] == '/': #add trailing / to path if needed
-		hadoop_dir+='/'
-
 	filename = os.path.basename(hadoop_path_to_file)
+	hadoop_dir+='/' #add trailing / to path
 
 	#Check if there is whitespace in the sample_name, this will cause errors with the scheme of putting sample files into /BASEDIR/sample_name
 
@@ -87,10 +111,16 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 		print("There can not be a space in the sample name")
 		return False
  
-	#Check if the record is already in the table. Having the same sample file twice will cause issues when we try to run the analysis on every file in a sample 
+	#Check if the record is already in the table. 
+	#Having the same sample file twice will cause issues when we try to run the analysis on every file in a sample. 
 
-	if sampleInTable(hadoop_path_to_file, True):
-		print("This sample file is already in the database, the old record was deleted")
+	ret_code = sampleInTable(hadoop_path_to_file, sample_name)
+	if not isinstance(ret_code, int):
+		print("This sample file is already in the database, but under the sample name %s. The file will not be added until the old sample is removed." % ret_code)
+		return False
+	elif ret_code == 0:
+		print("The sample is already in the table. The file will not be added again until the old sample is deleted")
+		return False
 
 	locationData = getBestDisk(sample_name) 
 	
@@ -172,3 +202,20 @@ def getBestDisk(sample_name):
 	#Return list of lists: [Condor ID, Machine, Local Directory]
 
 	return [ {"CondorID": x[2], "Machine" : str(x[3]), "LocalDirectory" :str(x[4])} for x in output ]
+
+
+@checkUniqueList
+def getMachineIDs(list_of_samples):
+	"""Takes in a list of sample files (specified by their sample ID) and returns a dictionary with the sample files as keys and CondorIDs as values"""
+
+	return_dict = {}
+
+	for sampleID in list_of_samples:
+		man["SampleFiles"]
+
+def IDsFromSampleName(sample_name):
+	return [x[0] for x in man.x("SELECT Sample_ID FROM SampleFiles WHERE Sample='%s'" % sample_name)]
+
+def makeCondorSubmitFile(CondorID, path_to_template, path_to_executable=None,path_to_proxy=None):
+	"""Invokes a sed call to exchange tokens in the condor template file with the proper values."""
+	pass

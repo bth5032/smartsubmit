@@ -176,7 +176,7 @@ class sqlman(object):
 
 	def listSamples(self, PRINT_OUT=False):
 		"""Lists unique sample names and the file count in the SampleFiles table"""
-		list_of_samples = self.x("SELECT Sample, Count(LocalPath) FROM SampleFiles Group By Sample")
+		list_of_samples = self.x("SELECT Sample, Count(LocalDirectory) FROM SampleFiles Group By Sample")
 
 		if PRINT_OUT:
 			for sampleName, count in list_of_samples:

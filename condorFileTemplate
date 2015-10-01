@@ -1,0 +1,22 @@
+universe=grid
+Grid_Resource=condor osg-gw-4.t2.ucsd.edu osg-gw-4.t2.ucsd.edu:9619
++DESIRED_Sites="T2_US_UCSD"
+Should_Transfer_Files = YES
+WhenToTransferOutput = ON_EXIT
+Transfer_Input_Files = TARFILE
+Transfer_Output_Files = /dev/null
+Output = logs/condorLog_ARG1_ARG3.stdout
+Error = logs/condorLog_ARG1_ARG3.stderr
+Log = logs/condorLog_ARG1_ARG3.log
++Owner = undefined
+
+notify_user = bthashemi@ucsd.edu
+x509userproxy = $$__PATH_TO_PROXY_FILE__$$
+
+Executable = $$__EXECUTABLE__$$
+Transfer_executable = True
+arguments = $$__PATH_TO_SAMPLE__$$
+
++$$__CONDOR_SLOT__$$= True
+
+Queue 1
