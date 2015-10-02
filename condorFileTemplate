@@ -11,7 +11,7 @@ Log = logs/condorLog_ARG1_ARG3.log
 +Owner = undefined
 
 notify_user = bthashemi@ucsd.edu
-x509userproxy = $$__PATH_TO_PROXY_FILE__$$
+x509userproxy = ### FILL IN PATH TO YOUR PROXY FILE HERE ####
 
 Executable = $$__EXECUTABLE__$$
 Transfer_executable = True
