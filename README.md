@@ -44,9 +44,8 @@ You may run the same executable on multiple samples with a single command by usi
 * It's generally good practice to have your executable be a BASH script that will run your root code on the files that come in through the command line, e.g. 
 
 
-    for i in `seq 1 $#`
-    do
-        /path/to/analysis_binary $i                     #run analysis code on each sample
-        <copy output file back to your local machine>
-    done
-
+        for i in `seq 1 $#`
+        do
+            /path/to/analysis_binary $i                     #run analysis code on each sample
+            <copy output file back to your local machine>
+        done
