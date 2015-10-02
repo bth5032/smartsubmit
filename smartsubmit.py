@@ -203,7 +203,6 @@ def getBestDisk(sample_name):
 
 	return [ {"CondorID": x[2], "Machine" : str(x[3]), "LocalDirectory" :str(x[4])} for x in output ]
 
-
 @checkUniqueList
 def getMachineIDs(list_of_samples):
 	"""Takes in a list of sample files (specified by their sample ID) and returns a dictionary with the sample files as keys and CondorIDs as values"""
@@ -216,6 +215,14 @@ def getMachineIDs(list_of_samples):
 def IDsFromSampleName(sample_name):
 	return [x[0] for x in man.x("SELECT Sample_ID FROM SampleFiles WHERE Sample='%s'" % sample_name)]
 
-def makeCondorSubmitFile(CondorID, path_to_template, path_to_executable=None,path_to_proxy=None):
+def makeCondorSubmitFile(path_to_template, sample_name, path_to_executable=None, path_to_proxy=None):
 	"""Invokes a sed call to exchange tokens in the condor template file with the proper values."""
-	pass
+	list_of_disks = [ y[0] for y in man.x("SELECT CondorID FROM SampleFiles WHERE Sample='%s' GROUP BY CondorID" % sample_name)]
+
+	if not list_of_disks:
+		print("There were no files associated with this sample in the filesystem. Please check the name and try again")
+		return False
+
+	for condor_id in list_of_disks:
+			list_of_files = [y[0]+y[1] for y in man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE CondorID = '%s' AND Sample='%s'" % (condor_id, sample_name))]
+			print(list_of_files)
