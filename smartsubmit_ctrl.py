@@ -5,11 +5,11 @@ parser.add_argument("-m", "--message", default="Hi There", help="choose the mess
 
 args=parser.parse_args()
 
-port="8000"
+port="7584"
 
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
 socket.connect("tcp://127.0.0.1:%s" % port)
-socket.send_string("%s" % "Hi")
-message = socket.recv()
-print("Recieved reply: %s" % ss.getBestDisk("ttbar_powheg_pythia8_25ns"))
+socket.send_string("%s" % "absorb sample file /hadoop/path/myfile.root")
+message = socket.recv_string()
+print("Recieved reply: %s" % message)
