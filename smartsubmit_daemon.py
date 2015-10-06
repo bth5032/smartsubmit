@@ -9,7 +9,6 @@ socket.bind("tcp://*:%s" % port)
 while True:
 	message=socket.recv_string()
 	tokens=message.split(" ")
-	print(message[:18])
 
 	if message[:18] == "absorb sample file":
 		
@@ -44,10 +43,18 @@ while True:
 	
 	elif message[:7] == "run job":
 		try:
-			path_to_exe = tokens[3]
-			sample_name = tokens[4]
+			path_to_exe = tokens[2]
+			sample_name = tokens[3]
+			tokens=list(filter(None, tokens))
 			print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
-			socket.send_string("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
+			if len(tokens) > 4:
+				for x in range(4, len(tokens)):
+					sample_name=tokens[x]
+					if sample_name:
+						print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
+				socket.send_string("running executable '%s' on samples '%s'" % (path_to_exe,str(tokens[3:])))
+			else:
+				socket.send_string("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
 		except IndexError:
 			print("error parsing command '%s'" % message)
 			socket.send_string("Error parsing command '%s' " % message)
