@@ -1,5 +1,7 @@
 import smartsubmit as ss
-import zmq
+import thread_printing as tp
+import zmq, time, threading
+
 
 context = zmq.Context()
 port="7584"
@@ -7,8 +9,22 @@ socket=context.socket(zmq.REP)
 socket.bind("tcp://*:%s" % port)
 
 while True:
+	
+	# Get output file
+	
+	message=socket.recv_string()
+	filename=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
+	try:
+		outfile=open(message+filename, "w+")
+		socket.send_string("File created succesfully, output from this command will be stored at %s" % message+filename)
+	except:
+		outfile=open("/tmp/"+filename, "w+")
+		socket.send_string("Could not open file at the specified location, output from this command will be stored at %s" % "/tmp/"+filename)
+
 	message=socket.recv_string()
 	tokens=message.split(" ")
+
+	# Get Command
 
 	if message[:18] == "absorb sample file":
 		
@@ -16,6 +32,7 @@ while True:
 			hadoop_path_to_file = tokens[3]
 			sample_name = tokens[4]
 			print("absorbing sample file '%s' under sample name '%s'" % (hadoop_path_to_file, sample_name))
+			#threading.Thread=ss.absorbSampleFile(sample_name, hadoop_path_to_file)
 			socket.send_string("Absorbing Sample File '%s' into sample '%s'" %(hadoop_path_to_file, sample_name) )
 		except IndexError:
 			print("error parsing command '%s'" % message)
@@ -58,6 +75,7 @@ while True:
 		except IndexError:
 			print("error parsing command '%s'" % message)
 			socket.send_string("Error parsing command '%s' " % message)
+	
 	else:
 		socket.send_string("""
 Error, no action defined for message '%s', allowable actions are:
@@ -66,4 +84,5 @@ Error, no action defined for message '%s', allowable actions are:
 	3. delete sample file <hadoop path to file>
 	4. run job <path to executable on network drive> <sample>
 """ % message)
+
 

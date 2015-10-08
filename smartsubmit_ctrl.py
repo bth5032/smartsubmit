@@ -1,4 +1,5 @@
-import zmq, argparse
+import zmq, argparse, os
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument( "--absorb_sample", help="absorb a sample file or directory, must be used with either -d or -f and -s", action="store_true")
@@ -8,9 +9,21 @@ parser.add_argument("-f", "--file", help="specify file to add or remove")
 parser.add_argument("-d", "--directory", help="specify directory to absorb")
 parser.add_argument("-s", "--sample", help="specify the sample name", action="append")
 parser.add_argument("-e", "--executable", help="specify the path to the executable which will run on the specified samples. Used with --run_jobs")
+parser.add_argument("-o", "--output", help="specify the directory for the file which will contain output from smartsubmit, default is the working directory")
+
 
 args=parser.parse_args()
 
+# Set up connection
+port="7584"
+
+context = zmq.Context()
+socket = context.socket(zmq.REQ)
+socket.connect("tcp://127.0.0.1:%s" % port)
+
+
+# Construct the command to send to the server.
+# --------------------------------------------------------------------
 command=""
 
 if args.absorb_sample:
@@ -58,11 +71,25 @@ if command:
 else:
 	print(args.help)
 
-port="7584"
 
-context = zmq.Context()
-socket = context.socket(zmq.REQ)
-socket.connect("tcp://127.0.0.1:%s" % port)
+# Send command to the server
+# -----------------------------------------------------------------------
 socket.send_string(command)
 message = socket.recv_string()
 print("Recieved reply: %s" % message)
+
+
+# Determine the directory for output files
+# -------------------------------------------------------------------------
+
+output_dir = os.getcwd()
+output_dir+='/'
+
+if args.output:
+	output_dir = args.output
+
+# Send Directory
+socket.send_string(output_dir)
+message = socket.recv_string()
+
+print(message)
