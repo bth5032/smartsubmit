@@ -24,7 +24,7 @@ class DiskRing(object):
 database_file = "test.db"
 working_dir = "."
 
-connection = sqlite3.connect(database_file)
+connection = sqlite3.connect(database_file, check_same_thread=False)
 man = sqlman.sqlman(connection, database_file, working_dir)
 
 def checkIfComputed(function):
@@ -38,16 +38,6 @@ def checkIfComputed(function):
 		disks.setList(function(sample_name))
 		
 		return disks.getNext()
-
-	return return_func
-
-def checkUniqueList(function):
-	def return_func(list_of_samples):
-		"""Checks that the list is unique and then calls getMachineIDs. Otherwise returns False"""
-		if len(set(list_of_samples)) == len(list_of_samples):
-			return function(list_of_samples)
-		else:
-			return False
 
 	return return_func
 
@@ -203,20 +193,29 @@ def getBestDisk(sample_name):
 
 	return [ {"CondorID": x[2], "Machine" : str(x[3]), "LocalDirectory" :str(x[4])} for x in output ]
 
-@checkUniqueList
-def getMachineIDs(list_of_samples):
-	"""Takes in a list of sample files (specified by their sample ID) and returns a dictionary with the sample files as keys and CondorIDs as values"""
-
-	return_dict = {}
-
-	for sampleID in list_of_samples:
-		man["SampleFiles"]
-
 def IDsFromSampleName(sample_name):
 	return [x[0] for x in man.x("SELECT Sample_ID FROM SampleFiles WHERE Sample='%s'" % sample_name)]
 
-def makeCondorSubmitFile(path_to_template, sample_name, path_to_executable=None, path_to_proxy=None):
-	"""Invokes a sed call to exchange tokens in the condor template file with the proper values."""
+def diskNameFromCondorID(condor_id):
+	row = man.x("SELECT Machine, LocalDirectory FROM Disks WHERE CondorID='%s'" % condor_id)
+	if row:
+		return "%s:%s" % (row[0][0], row[0][1])
+	else:
+		return None
+
+def condorSubmit(path_to_template, path_to_executable, condor_id,list_of_files):
+	"""Makes a temporary condor submit file using sed to replace tokens in the template file, then calls condor_submit on the processed submit file"""
+
+	(machine, disk) = diskNameFromCondorID(condor_id).split(":")
+	space_seperated_list_of_files = " ".join(list_of_files)
+
+	sed_command = "sed -e 's/$$__EXECUTABLE__$$/%s/g' -e 's/$$__PATH_TO_SAMPLE__$$/%s/g' -e 's/$$__CONDOR_SLOT__$$/%s/g' -e 's/$$__MACHINE__$$/%s/g' -e 's/$$__DISK__$$/%s/g' > condor_submit.tmp" %(path_to_executable, space_seperated_list_of_files, condor_id, machine, disk)
+	print("running sed command %s" % sed_command)
+
+	sed = subprocess.Popen(sed_command)
+
+def runJob(path_to_executable, sample_name, path_to_template=None):
+	"""Looks up all the disks that store files in the sample and computes which files in the sample are on the same disk and then calls condorSubmit() for each disk."""
 	list_of_disks = [ y[0] for y in man.x("SELECT CondorID FROM SampleFiles WHERE Sample='%s' GROUP BY CondorID" % sample_name)]
 
 	if not list_of_disks:
@@ -225,4 +224,32 @@ def makeCondorSubmitFile(path_to_template, sample_name, path_to_executable=None,
 
 	for condor_id in list_of_disks:
 			list_of_files = [y[0]+y[1] for y in man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE CondorID = '%s' AND Sample='%s'" % (condor_id, sample_name))]
-			print(list_of_files)
+			print("In the directory: %s \nWe will run the executable on: \n %s \n ------------ " % (diskNameFromCondorID(condor_id), str(list_of_files)))
+			condorSubmit(path_to_template, path_to_executable, condor_id, list_of_files)
+
+def deleteSampleFile(hadoop_path_to_file, LAZY=True):
+	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory"""
+
+	hadoop_dir = os.path.dirname(hadoop_path_to_file)+'/'
+	filename = os.path.basename(hadoop_path_to_file)
+
+	man.removeSample(hadoop_dir, filename)
+
+	print("The sample was succesfully removed from the table.")
+
+	if not LAZY:
+		(machine, local_dir) = man.x("SELECT Machine, LocalDirectory FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))[0]
+
+		ssh_syntax = "ssh %s rm %s " % (machine, hadoop_path_to_file)
+
+		rm = subprocess.Popen(ssh_syntax, stdout=sys.stdout, stderr=sys.stderr, shell=True)
+		
+		rm.wait()
+
+		exit_code = rm.returncode
+
+		if exit_code == 0:
+			print("The sample was succesfully deleted from the remote directory")	
+		else:
+			print("The sample was not succesfully removed, exit status:")
+			print(exit_code)

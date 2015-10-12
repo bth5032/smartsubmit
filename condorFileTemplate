@@ -5,9 +5,9 @@ Should_Transfer_Files = YES
 WhenToTransferOutput = ON_EXIT
 Transfer_Input_Files = TARFILE
 Transfer_Output_Files = /dev/null
-Output = logs/condorLog_ARG1_ARG3.stdout
-Error = logs/condorLog_ARG1_ARG3.stderr
-Log = logs/condorLog_ARG1_ARG3.log
+Output = logs/condorLog_$$__MACHINE__$$_$$__DISK__$$.stdout
+Error = logs/condorLog_$$__MACHINE__$$_$$__DISK__$$.stderr
+Log = logs/condorLog_$$__MACHINE__$$_$$__DISK__$$.log
 +Owner = undefined
 
 notify_user = bthashemi@ucsd.edu

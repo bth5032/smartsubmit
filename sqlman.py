@@ -102,10 +102,10 @@ class sqlman(object):
 			print("There was an error creating the table: %s" % err)
 			return False
 
-	def removeSample(self, hadoopPath):
+	def removeSample(self, hadoopDirectory, filename):
 		"""Removes the row from the Disks table corresponding to machine:path and commits the change to the file."""
 		try:
-			self.cursor.execute( "DELETE FROM Disks WHERE HadoopPath='%s'" % hadoopPath)
+			self.cursor.execute( "DELETE FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoopDirectory, filename))
 			self.connection.commit()
 		except sqlite3.OperationalError as err:
 			print("There was an error removing the row: %s" % err)

@@ -22,6 +22,22 @@ socket = context.socket(zmq.REQ)
 socket.connect("tcp://127.0.0.1:%s" % port)
 
 
+# Determine the directory for output files
+# -------------------------------------------------------------------------
+
+output_dir = os.getcwd()
+output_dir+='/'
+
+if args.output:
+	output_dir = args.output
+
+# Send Directory
+socket.send_string(output_dir)
+message = socket.recv_string()
+
+print(message)
+
+
 # Construct the command to send to the server.
 # --------------------------------------------------------------------
 command=""
@@ -77,19 +93,3 @@ else:
 socket.send_string(command)
 message = socket.recv_string()
 print("Recieved reply: %s" % message)
-
-
-# Determine the directory for output files
-# -------------------------------------------------------------------------
-
-output_dir = os.getcwd()
-output_dir+='/'
-
-if args.output:
-	output_dir = args.output
-
-# Send Directory
-socket.send_string(output_dir)
-message = socket.recv_string()
-
-print(message)
