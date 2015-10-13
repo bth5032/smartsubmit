@@ -53,6 +53,8 @@ def buildCommand(args):
 	else:
 		return ""
 
+	return command
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument( "--absorb_sample", help="absorb a sample file or directory, must be used with either -d or -f and -s", action="store_true")
