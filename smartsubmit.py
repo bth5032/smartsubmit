@@ -218,7 +218,7 @@ def condorSubmit(path_to_template, path_to_executable, condor_id,list_of_files):
 	exit_code = sed.returncode
 
 	if not exit_code == 0: #Break if sed error
-		print"There was an error creating the submit file from the template. sed quit with error code %i. Will not attempt to submit job for %s" % (exit_code, diskNameFromCondorID(condor_id))
+		print("There was an error creating the submit file from the template. sed quit with error code %i. Will not attempt to submit job for %s") % (exit_code, diskNameFromCondorID(condor_id))
 		return exit_code
 
 	condor_submit_command = "condor_submit condor_submit.tmp"
