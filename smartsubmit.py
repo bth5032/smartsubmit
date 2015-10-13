@@ -53,6 +53,7 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 	exit_code = rsync.returncode
 
 	if exit_code == 0:
+		print("File: %s was moved succesfully! There is a copy at %s:%s" % (os.basename(hadoop_path_to_file), Machine, sample_dir))
 		return True	
 	else: 
 		raise RsyncError(exit_code)
