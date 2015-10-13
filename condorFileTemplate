@@ -1,9 +1,6 @@
 universe=grid
 Grid_Resource=condor osg-gw-4.t2.ucsd.edu osg-gw-4.t2.ucsd.edu:9619
 +DESIRED_Sites="T2_US_UCSD"
-Should_Transfer_Files = YES
-WhenToTransferOutput = ON_EXIT
-Transfer_Input_Files = TARFILE
 Transfer_Output_Files = /dev/null
 Output = logs/condorLog_$$__MACHINE__$$_$$__CONDOR_ID__$$.stdout
 Error = logs/condorLog_$$__MACHINE__$$_$$__CONDOR_ID__$$.stderr
