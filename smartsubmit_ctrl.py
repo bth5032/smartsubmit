@@ -49,7 +49,6 @@ def buildCommand(args):
 			print("You must specify an executable to run")
 			return ""
 	else:
-		print(args.help)
 		return ""
 
 
@@ -71,7 +70,7 @@ arguments=parser.parse_args()
 command = buildCommand(arguments)
 
 if not command: #the user messed up if empty
-	print(arguments.help)
+	parser.print_help()
 	sys.exit(1)
 
 # Set up connection
