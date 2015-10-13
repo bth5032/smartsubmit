@@ -68,18 +68,22 @@ while True:
 	
 	elif message[:7] == "run job":
 		try:
-			path_to_exe = tokens[2]
-			sample_name = tokens[3]
+			path_to_template = tokens[2]
+			path_to_exe = tokens[3]
+			sample_name = tokens[4]
 			tokens=list(filter(None, tokens)) #make sure all tokens are not empty
+			
 			print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
-			t=threading.Thread(name=threadname, target=ss.runJob, args=())
-			if len(tokens) > 4:
-				threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
-				for x in range(4, len(tokens)):
+			t=threading.Thread(name=threadname, target=ss.runJob, args=(path_to_exe, sample_name, path_to_template))
+			t.start()
+			if len(tokens) > 5: #Running over multiple samples
+				for x in range(5, len(tokens)):
+					threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
 					sample_name=tokens[x]
-					if sample_name:
-						print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
-				socket.send_string("running executable '%s' on samples '%s'" % (path_to_exe,str(tokens[3:])))
+					print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
+					t=threading.Thread(name=threadname, target=ss.runJob, args=(path_to_exe, sample_name, path_to_template))
+					t.start()
+				socket.send_string("running executable '%s' on samples '%s'. \nNOTE: There were multiple samples provided, each will have it's own output file." % (path_to_exe,str(tokens[4:])))
 			else:
 				socket.send_string("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
 		except IndexError:
