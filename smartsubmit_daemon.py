@@ -50,7 +50,7 @@ while True:
 			print("absorbing directory '%s' under sample name '%s'" % (hadoop_path_to_dir, sample_name))
 			tp.printer.add_thread(threadname, outfile)
 			t=threading.Thread(name=threadname, target=ss.absorbDirectory, args=(hadoop_path_to_dir, sample_name))
-			tp.add_thread(threadname, outfile)
+			tp.printer.add_thread(threadname, outfile)
 			t.start()
 			socket.send_string("Creating sample '%s' from directory '%s'." % (sample_name,hadoop_path_to_dir))
 		except IndexError:
