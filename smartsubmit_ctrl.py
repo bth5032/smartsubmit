@@ -10,6 +10,7 @@ parser.add_argument("-d", "--directory", help="specify directory to absorb")
 parser.add_argument("-s", "--sample", help="specify the sample name", action="append")
 parser.add_argument("-e", "--executable", help="specify the path to the executable which will run on the specified samples. Used with --run_jobs")
 parser.add_argument("-o", "--output", help="specify the directory for the file which will contain output from smartsubmit, default is the working directory")
+parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate")
 
 
 args=parser.parse_args()
@@ -70,6 +71,12 @@ elif args.delete_sample:
 
 elif args.run_job:
 	command+="run job "
+	
+	if args.template:
+		command+=args.template+" "
+	else:
+		command+="./condorFileTemplate "
+
 	if args.executable:
 		command+=args.executable+" "
 		if args.sample:
