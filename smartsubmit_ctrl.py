@@ -1,7 +1,7 @@
 import zmq, argparse, os, sys
 
 def buildCommand(args):
-
+	command = ""
 	if args.absorb_sample:
 		command+="absorb sample "
 		if args.sample:
