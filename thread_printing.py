@@ -1,8 +1,8 @@
 """Module which allows each thread to print to its own file specified in the printer object's thread_files dictionary"""
 
-import threading, time, sys, _io
+import threading, time, sys, io
 
-class ThreadPrinter(_io.TextIOWrapper):
+class ThreadPrinter(io.TextIOWrapper):
 	def __init__(self):
 		self.thread_files = {}
 
