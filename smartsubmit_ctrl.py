@@ -64,14 +64,14 @@ parser.add_argument("-e", "--executable", help="specify the path to the executab
 parser.add_argument("-o", "--output", help="specify the directory for the file which will contain output from smartsubmit, default is the working directory")
 parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate")
 
-args=parser.parse_args()
+arguments=parser.parse_args()
 
 # Construct the command to send to the server.
 # --------------------------------------------------------------------
-command = buildCommand(args)
+command = buildCommand(arguments)
 
 if not command: #the user messed up if empty
-	print(args.help)
+	print(arguments.help)
 	sys.exit(1)
 
 # Set up connection
