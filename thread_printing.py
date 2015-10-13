@@ -2,7 +2,7 @@
 
 import threading, time, sys, io
 
-class ThreadPrinter(io.BufferedReader):
+class ThreadPrinter(__builtin__.file):
 	def __init__(self):
 		self.thread_files = {}
 
