@@ -136,7 +136,7 @@ def absorbDirectory(dir_path, sample_name, NO_OVERWRITE=True):
 			if(not NO_OVERWRITE):
 				absorbSampleFile(sample_name, hadoop_path_to_file)
 			else:
-				if not sampleInTable(hadoop_path_to_file):
+				if not sampleInTable(hadoop_path_to_file, sample_name):
 					absorbSampleFile(sample_name, hadoop_path_to_file)
 
 @checkIfComputed
