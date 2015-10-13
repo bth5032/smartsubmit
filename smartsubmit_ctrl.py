@@ -75,7 +75,6 @@ command = buildCommand(arguments)
 
 if not command: #the user messed up if empty
 	parser.print_help()
-	sys.exit(1)
 
 # Set up connection
 # -----------------------------------------------------------------------
