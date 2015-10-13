@@ -1,4 +1,4 @@
-import zmq, argparse, os
+import zmq, argparse, os, sys
 
 
 parser = argparse.ArgumentParser()
@@ -52,14 +52,14 @@ if args.absorb_sample:
 			command+="file "+args.file+" "
 		else:
 			print("You must specify a file or directory to absorb with -f or -d")
-			exit(1)
+			sys.exit(1)
 		command+=args.sample[0] #There should not be more than one sample for absorbsion
 		if len(args.sample) > 1:
 			print("There should only be one sample name specified")
-			exit(1)
+			sys.exit(1)
 	else:
 		print("You must specify at least one sample name")
-		exit(1)	
+		sys.exit(1)	
 
 elif args.delete_sample:
 	command+="delete sample file "
@@ -67,7 +67,7 @@ elif args.delete_sample:
 		command+=args.file+" "
 	else:
 		print("You must specify a hadoop path to the file you want to delete.")
-		exit(1)
+		sys.exit(1)
 
 elif args.run_job:
 	command+="run job "
@@ -84,10 +84,10 @@ elif args.run_job:
 				command+=sample+" "
 		else:
 			print("You must specify a sample to run over")
-			exit(1)
+			sys.exit(1)
 	else:
 		print("You must specify an executable to run")
-		exit(1)
+		sys.exit(1)
 
 if command:
 	print(command)
