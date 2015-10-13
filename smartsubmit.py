@@ -46,7 +46,7 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 	
 	ssh_syntax = "ssh %s rsync --progress %s %s " % (Machine, hadoop_path_to_file, sample_dir)
 
-	rsync = subprocess.Popen(ssh_syntax, stdout=sys.stdout, stderr=sys.stderr, shell=True)
+	rsync = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	
 	rsync.wait()
 
@@ -209,25 +209,28 @@ def condorSubmit(path_to_template, path_to_executable, condor_id,list_of_files):
 	(machine, disk) = diskNameFromCondorID(condor_id).split(":")
 	space_seperated_list_of_files = " ".join(list_of_files)
 
-	sed_command = "sed -e 's/$$__EXECUTABLE__$$/%s/g' -e 's/$$__PATH_TO_SAMPLE__$$/%s/g' -e 's/$$__CONDOR_SLOT__$$/%s/g' -e 's/$$__MACHINE__$$/%s/g' -e 's/$$__DISK__$$/%s/g' < %s > condor_submit.tmp" %(path_to_template, path_to_executable, space_seperated_list_of_files, condor_id, machine, disk)
+	sed_command = "sed -e 's,\$\$__EXECUTABLE__\$\$,%s,g;s,\$\$__PATH_TO_SAMPLE__\$\$,%s,g;s,\$\$__CONDOR_SLOT__\$\$,%s,g;s,\$\$__MACHINE__\$\$,%s,g;s,\$\$__CONDOR_ID__\$\$,%s,g' < %s > condor_submit.tmp" %(path_to_executable, space_seperated_list_of_files, condor_id, machine, condor_id, path_to_template)
 	print("running sed command %s" % sed_command)
 
-	sed = subprocess.Popen(sed_command, stdout=sys.stdout, stderr=sys.stderr, shell=True)
+	sed = subprocess.Popen(sed_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	
 	sed.wait()
 
 	exit_code = sed.returncode
 
 	if not exit_code == 0: #Break if sed error
-		print("There was an error creating the submit file from the template. sed quit with error code %i. Will not attempt to submit job for %s") % (exit_code, diskNameFromCondorID(condor_id))
+		print("There was an error creating the submit file from the template. sed quit with error code %s. Will not attempt to submit job for %s" % (str(exit_code), str(diskNameFromCondorID(condor_id))) )
 		return exit_code
 
 	condor_submit_command = "condor_submit condor_submit.tmp"
 
-	condor_submit = subprocess.Popen(condor_submit_command, stdout=sys.stdout, stderr=sys.stderr, shell=True)
+	condor_submit = subprocess.Popen(condor_submit_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	condor_submit.wait()
 
-	return condor_submit.returncode
+	exit_code = condor_submit.returncode
 
+	if not exit_code == 0:
+		print(condor_submit.communicate())
 def runJob(path_to_executable, sample_name, path_to_template):
 	"""Looks up all the disks that store files in the sample and computes which files in the sample are on the same disk and then calls condorSubmit() for each disk."""
 	list_of_disks = [ y[0] for y in man.x("SELECT CondorID FROM SampleFiles WHERE Sample='%s' GROUP BY CondorID" % sample_name)]

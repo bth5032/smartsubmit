@@ -12,13 +12,14 @@ while True:
 	
 	# Get output file
 	
-	message=socket.recv_string()
+	working_dir=socket.recv_string()
 	threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
 	try:
-		outfile=open(message+threadname, "w+")
-		socket.send_string("File created succesfully, output from this command will be stored at %s" % message+threadname)
+		outfile=open(working_dir+threadname, "w+")
+		socket.send_string("File created succesfully, output from this command will be stored at %s" % working_dir+threadname)
 	except:
-		outfile=open("/tmp/"+threadname, "w+")
+		working_dir="/tmp/"
+		outfile=open(working_dir+threadname, "w+")
 		socket.send_string("Could not open file at the specified location, output from this command will be stored at %s" % "/tmp/"+threadname)
 
 	message=socket.recv_string()
@@ -34,6 +35,7 @@ while True:
 			print("absorbing sample file '%s' under sample name '%s'" % (hadoop_path_to_file, sample_name))
 			tp.printer.add_thread(threadname, outfile)
 			t=threading.Thread(name=threadname, target=ss.absorbSampleFile, args=(sample_name, hadoop_path_to_file))
+			tp.add_thread(threadname, outfile)
 			socket.send_string("Absorbing Sample File '%s' into sample '%s'" %(hadoop_path_to_file, sample_name) )
 			t.start()
 		except IndexError:
@@ -48,6 +50,7 @@ while True:
 			print("absorbing directory '%s' under sample name '%s'" % (hadoop_path_to_dir, sample_name))
 			tp.printer.add_thread(threadname, outfile)
 			t=threading.Thread(name=threadname, target=ss.absorbDirectory, args=(hadoop_path_to_dir, sample_name))
+			tp.add_thread(threadname, outfile)
 			t.start()
 			socket.send_string("Creating sample '%s' from directory '%s'." % (sample_name,hadoop_path_to_dir))
 		except IndexError:
@@ -60,6 +63,7 @@ while True:
 			print("deleting sample file '%s'" % hadoop_path_to_file)
 			tp.printer.add_thread(threadname, outfile)
 			t=threading.Thread(name=threadname, target=ss.deleteSampleFile, args=(hadoop_path_to_file,))
+			tp.add_thread(threadname, outfile)
 			t.start()
 			socket.send_string("Deleting Sample File '%s'" % hadoop_path_to_file)
 		except IndexError:
@@ -75,13 +79,16 @@ while True:
 			
 			print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
 			t=threading.Thread(name=threadname, target=ss.runJob, args=(path_to_exe, sample_name, path_to_template))
+			tp.printer.add_thread(threadname, outfile)
 			t.start()
 			if len(tokens) > 5: #Running over multiple samples
 				for x in range(5, len(tokens)):
 					threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
+					outfile = open(working_dir+threadname, "w+")
 					sample_name=tokens[x]
 					print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
 					t=threading.Thread(name=threadname, target=ss.runJob, args=(path_to_exe, sample_name, path_to_template))
+					tp.printer.add_thread(threadname, outfile)
 					t.start()
 				socket.send_string("running executable '%s' on samples '%s'. \nNOTE: There were multiple samples provided, each will have it's own output file." % (path_to_exe,str(tokens[4:])))
 			else:
