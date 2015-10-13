@@ -91,8 +91,8 @@ socket.connect("tcp://127.0.0.1:%s" % port)
 output_dir = os.getcwd()
 output_dir+='/'
 
-if args.output:
-	output_dir = args.output
+if arguments.output:
+	output_dir = args.output if args.output[-1:] == '/' else args.output+"/" 
 
 # Send Directory
 socket.send_string(output_dir)
