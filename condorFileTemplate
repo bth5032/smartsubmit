@@ -8,7 +8,7 @@ Log = logs/condorLog_$$__MACHINE__$$_$$__CONDOR_ID__$$.log
 +Owner = undefined
 
 notify_user = bthashemi@ucsd.edu
-x509userproxy = ### FILL IN PATH TO YOUR PROXY FILE HERE ####
+x509userproxy = /tmp/x509up_u31589
 
 Executable = $$__EXECUTABLE__$$
 Transfer_executable = True
