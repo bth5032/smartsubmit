@@ -71,6 +71,7 @@ args=parser.parse_args()
 command = buildCommand(args)
 
 if not command: #the user messed up if empty
+	print(args.help)
 	sys.exit(1)
 
 # Set up connection
