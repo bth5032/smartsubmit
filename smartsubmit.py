@@ -72,7 +72,7 @@ def sampleInTable(hadoop_path_to_file, sample_name):
 	filename = os.path.basename(hadoop_path_to_file)
 
 	row = man.x("SELECT Sample FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))
-	print(row)
+	#print(row)
 	if len(row): #row[0] should be the only record if any is returned
 		if row[0][0] == sample_name:
 			return 1
@@ -108,7 +108,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 	if not isinstance(ret_code, int):
 		print("This sample file is already in the database, but under the sample name %s. The file will not be added until the old sample is removed." % ret_code)
 		return False
-	elif ret_code == 0:
+	elif ret_code == 1:
 		print("The sample is already in the table. The file will not be added again until the old sample is deleted")
 		return False
 
