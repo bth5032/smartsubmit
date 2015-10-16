@@ -1,12 +1,25 @@
 import smartsubmit as ss
 import thread_printing as tp
 import zmq, time, threading
-
+from ss_com import SmartSubmitCommand
 
 context = zmq.Context()
 port="7584"
 socket=context.socket(zmq.REP)
 socket.bind("tcp://*:%s" % port)
+
+def processCommand(command):
+	if command.command == "run job":
+		runJob(command)
+	elif command.command == "add file":
+		addFile(command)
+	elif command.command == "delete file":
+		deleteFile(command)
+	elif command.command == "add directory":
+		addDir(command)
+	elif command.command == "delete sample":
+		deleteSample(command)
+
 
 while True:
 	
@@ -14,7 +27,7 @@ while True:
 	
 	working_dir=socket.recv_string()
 	threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
-	try:
+	try: #Open the file they specified.
 		outfile=open(working_dir+threadname, "w+")
 		socket.send_string("File created succesfully, output from this command will be stored at %s" % working_dir+threadname)
 	except:
@@ -22,8 +35,8 @@ while True:
 		outfile=open(working_dir+threadname, "w+")
 		socket.send_string("Could not open file at the specified location, output from this command will be stored at %s" % "/tmp/"+threadname)
 
-	message=socket.recv_string()
-	tokens=message.split(" ")
+	command=socket.recv_pyobj()
+	"""tokens=message.split(" ")
 
 	# Get Command
 
@@ -98,12 +111,15 @@ while True:
 			socket.send_string("Error parsing command '%s' " % message)
 	
 	else:
-		socket.send_string("""
+		socket.send_string(
 Error, no action defined for message '%s', allowable actions are:
 	1. absorb sample file <hadoop path to file> <sample name>
 	2. absorb sample directory <hadoop path to directory> <sample name>
 	3. delete sample file <hadoop path to file>
 	4. run job <path to executable on network drive> <sample>
-""" % message)
+	 % message)"""
+
+	print(command)
+	socket.send_string("fuck!")
 
 
