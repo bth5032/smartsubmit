@@ -17,6 +17,11 @@ class ThreadPrinter(io.TextIOWrapper):
 		except:
 			sys.__stdout__.write(value)
 
+		"""try:
+			logging.info("from thread: %s\n%s\n----------------\n" % (threading.currentThread().name, value))
+		except: #Logging not set up
+			pass"""
+
 
 
 printer = ThreadPrinter()

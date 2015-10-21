@@ -1,12 +1,16 @@
 import smartsubmit as ss
 import thread_printing as tp
-import zmq, time, threading
+import zmq, time, threading, logging
 from ss_com import SmartSubmitCommand
 
 context = zmq.Context()
 port="7584"
 socket=context.socket(zmq.REP)
 socket.bind("tcp://*:%s" % port)
+
+start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
+logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG)
+logging.info("smartsubmit started at %s" % start_time)
 
 def processCommand(command):
 	if command.command == "run job":
@@ -20,27 +24,26 @@ def processCommand(command):
 	elif command.command == "delete sample":
 		deleteSample(command)
 
+def checkOnJob(jobID):
+	pass
 
 while True:
 	
 	# Get output file
 	
-	working_dir=socket.recv_string()
-	threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
-	try: #Open the file they specified.
-		outfile=open(working_dir+threadname, "w+")
-		socket.send_string("File created succesfully, output from this command will be stored at %s" % working_dir+threadname)
-	except:
-		working_dir="/tmp/"
-		outfile=open(working_dir+threadname, "w+")
-		socket.send_string("Could not open file at the specified location, output from this command will be stored at %s" % "/tmp/"+threadname)
-
 	command=socket.recv_pyobj()
-	"""tokens=message.split(" ")
+	logging.info("recieved command: '%s' from user %s" % (command.command, command.user))
 
-	# Get Command
+	threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
 
-	if message[:18] == "absorb sample file":
+	working_dir="/tmp/"
+	outfile_name = working_dir+threadname 
+	outfile=open(outfile_name, "w+")
+	command.outfile = outfile
+	command.outfile_name = outfile_name
+
+
+	if command.command == "add file":
 		
 		try:
 			hadoop_path_to_file = tokens[3]
@@ -55,7 +58,7 @@ while True:
 			print("error parsing command '%s'" % message)
 			socket.send_string("Error parsing command '%s' " % message)
 
-	elif message[:23] == "absorb sample directory":
+	elif command.command == "add directory":
 		
 		try:
 			hadoop_path_to_dir = tokens[3]
@@ -70,7 +73,7 @@ while True:
 			print("error parsing command '%s'" % message)
 			socket.send_string("Error parsing command '%s' " % message)
 	
-	elif message[:18] == "delete sample file":
+	elif command.command == "delete file":
 		try:
 			hadoop_path_to_file = tokens[3]
 			print("deleting sample file '%s'" % hadoop_path_to_file)
@@ -83,7 +86,7 @@ while True:
 			print("error parsing command '%s'" % message)
 			socket.send_string("Error parsing command '%s' " % message)
 	
-	elif message[:7] == "run job":
+	elif command.command == "run job":
 		try:
 			path_to_template = tokens[2]
 			path_to_exe = tokens[3]
@@ -111,13 +114,12 @@ while True:
 			socket.send_string("Error parsing command '%s' " % message)
 	
 	else:
-		socket.send_string(
-Error, no action defined for message '%s', allowable actions are:
-	1. absorb sample file <hadoop path to file> <sample name>
-	2. absorb sample directory <hadoop path to directory> <sample name>
-	3. delete sample file <hadoop path to file>
-	4. run job <path to executable on network drive> <sample>
-	 % message)"""
+		logging.error("No action defined for '%s'" % command.command)
+		print("""Error, no action defined for message '%s', allowable actions are:
+	1. add file
+	2. add directory
+	3. delete file
+	4. run job""" % command.command)
 
 	print(command)
 	socket.send_string("fuck!")

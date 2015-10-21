@@ -2,7 +2,6 @@ import sqlman, sqlite3, itertools, os, subprocess, sys
 from custom_errors import RsyncError
 
 
-
 class DiskRing(object):
 	"""Holds the list of disks available for new sample files. The list of directories is ordered by the method getBestDisk, which attempts to spread the sample files over disks and machines as much as possible.""" 
 	def __init__(self, sample, ordered_list):
@@ -204,24 +203,45 @@ def diskNameFromCondorID(condor_id):
 	else:
 		return None
 
-def runJob(path_to_executable, sample_name, path_to_template):
-	"""Looks up all the disks that store files in the sample and computes which files in the sample are on the same disk and then calls condorSubmit() for each disk."""
-	list_of_disks = [ y[0] for y in man.x("SELECT CondorID FROM SampleFiles WHERE Sample='%s' GROUP BY CondorID" % sample_name)]
+def computeJob(sample_name):
+	"""Takes in a sample name and returns a list of the (disk, machine) pairs where the samples are stored"""
+	logging.info("Computing condor jobs for sample '%s'" % sample_name)
+	print("Computing condor jobs for sample '%s'" % sample_name)
+
+	list_of_disks = [ [ y[0], y[1], y[2] ] for y in man.x("SELECT Machine, LocalDirectory, CondorID FROM SampleFiles WHERE Sample='%s' GROUP BY CondorID" % sample_name)]
 
 	if not list_of_disks:
-		print("There were no files associated with this sample in the filesystem. Please check the name and try again")
+		print("There were no files associated with the sample '%s' in the filesystem. Please check the name and try again" % sample_name)
+		logging.error("There were no files associated with the sample '%s' in the filesystem. Please check the name and try again" % sample_name)
 		return False
 
-	for condor_id in list_of_disks:
-			list_of_files = [y[0]+y[1] for y in man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE CondorID = '%s' AND Sample='%s'" % (condor_id, sample_name))]
-			print("In the directory: %s \nWe will run the executable on: \n %s \n ------------ " % (diskNameFromCondorID(condor_id), str(list_of_files)))
-			condorSubmit(path_to_template, path_to_executable, condor_id, list_of_files)
+	list_of_jobs = [] # Should be one for each disk
 
-def deleteSampleFile(hadoop_path_to_file, LAZY=True):
+	for (machine, path, condor_id) in list_of_disks:
+			
+			#get list of files on that drive
+			list_of_files = [ y[0]+y[1] for y in man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE CondorID = '%s' AND Sample='%s'" % (condor_id, sample_name))]
+			
+			#add drive info and list of files on that drive to our job list
+			list_of_jobs.append([machine, path, list_of_files])
+
+
+			print("A condor job has been enumerated. The disk '%s' holds files\n '%s' \n -----------------\n" % (machine+':'+path, str(list_of_files)) )
+			logging.info("A condor job has been enumerated. The disk '%s' holds files\n '%s' \n -----------------\n" % (machine+':'+path, str(list_of_files)))
+	
+	return list_of_jobs
+
+def deleteSampleFile(hadoop_path_to_file, user, LAZY=True):
 	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory"""
 
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)+'/'
 	filename = os.path.basename(hadoop_path_to_file)
+
+	owner = man.getOwner(hadoop_dir, filename)
+
+	if not owner == user:
+		print("%s can not remove file %s%s, it must be removed by the user who added it: %s" % (user, hadoop_dir, filename, owner))
+		return 
 
 	man.removeSample(hadoop_dir, filename)
 

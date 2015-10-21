@@ -73,7 +73,8 @@ class sqlman(object):
 								    HadoopPath     VARCHAR (500) NOT NULL,
 								    CondorID       VARCHAR (50) NOT NULL,
 								    Machine        VARCHAR (100) NOT NULL,
-								    Disk_ID        INTEGER NOT NULL,
+								    User           VARCHAR (100) NOT NULL,
+									    Disk_ID        INTEGER NOT NULL,
 								    FOREIGN KEY (
 								        Disk_ID
 								    )
@@ -101,6 +102,11 @@ class sqlman(object):
 		except sqlite3.OperationalError as err:
 			print("There was an error creating the table: %s" % err)
 			return False
+
+	def getOwner(self, hadoopDirectory, filename):
+		"""Gets the username of the user who inserted the sample file"""
+
+		return self.x("SELECT user FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoopDirectory, filename) )[0][0]
 
 	def removeSample(self, hadoopDirectory, filename):
 		"""Removes the row from the Disks table corresponding to machine:path and commits the change to the file."""
@@ -138,7 +144,7 @@ class sqlman(object):
 			print("There was an error dropping the table: %s" % err )
 			return None
 
-	def addSampleFile(self, sample, filename, localPath, hadoopDirectory, machine):
+	def addSampleFile(self, sample, filename, localPath, hadoopDirectory, machine, user):
 		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the folder containing the file on the IOSlot slave, hadoopDirectory is the location of the file in Hadoop, machine is the domain name of the slave, and condorID is the condor identifier for the slot associated with the disk."""
 		
 		if not localPath[-1:] == '/': #add trailing / to path if needed
@@ -148,8 +154,8 @@ class sqlman(object):
 
 
 		query = """INSERT INTO 
-				SampleFiles(Sample, LocalDirectory, HadoopPath, Filename, CondorID, Machine, Disk_ID) 
-				VALUES('%s', '%s', '%s', '%s', (SELECT CondorID FROM Disks WHERE Machine='%s' AND LocalDirectory='%s'), '%s', (SELECT Disk_ID FROM Disks WHERE Machine='%s' And LocalDirectory='%s'))""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, localPath, machine, machine, localPath)
+				SampleFiles(Sample, LocalDirectory, HadoopPath, Filename, CondorID, Machine, Disk_ID, User) 
+				VALUES('%s', '%s', '%s', '%s', (SELECT CondorID FROM Disks WHERE Machine='%s' AND LocalDirectory='%s'), '%s', (SELECT Disk_ID FROM Disks WHERE Machine='%s' And LocalDirectory='%s'), user='%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, localPath, machine, machine, localPath, user)
 		
 		try:
 			return self.x(query)

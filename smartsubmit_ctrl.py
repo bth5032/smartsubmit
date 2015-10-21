@@ -97,6 +97,21 @@ def condorSubmit(command, path_to_template, path_to_executable, condor_id,list_o
 	if not exit_code == 0:
 		print(condor_submit.communicate())
 
+def sendCommand(command_obj):
+	# Set up connection
+	# -----------------------------------------------------------------------
+	port="7584"
+	context = zmq.Context()
+	socket = context.socket(zmq.REQ)
+	socket.connect("tcp://127.0.0.1:%s" % port)
+
+	# Send command to the server
+	# -----------------------------------------------------------------------
+	socket.send_pyobj(command_obj)
+	message = socket.recv_string()
+	print("Recieved reply: %s" % message)
+
+
 # ------------------------------------------------------
 # Start Main 
 # ------------------------------------------------------
@@ -121,33 +136,9 @@ arguments=parser.parse_args()
 # --------------------------------------------------------------------
 command = buildCommand(arguments)
 
-if not command: #the user messed up if empty
+if command: 
+	sendCommand(command)
+else: #the user messed up if empty
 	parser.print_help()
 
-# Set up connection
-# -----------------------------------------------------------------------
-port="7584"
-context = zmq.Context()
-socket = context.socket(zmq.REQ)
-socket.connect("tcp://127.0.0.1:%s" % port)
 
-# Determine the directory for output files
-# -------------------------------------------------------------------------
-output_dir = os.getcwd()
-output_dir+='/'
-
-if arguments.output:
-	output_dir = args.output if args.output[-1:] == '/' else args.output+"/" 
-
-# Send Directory
-# -----------------------------------------------------------------------
-socket.send_string(output_dir)
-message = socket.recv_string()
-
-print(message)
-
-# Send command to the server
-# -----------------------------------------------------------------------
-socket.send_pyobj(command)
-message = socket.recv_string()
-print("Recieved reply: %s" % message)
