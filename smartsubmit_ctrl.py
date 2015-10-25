@@ -63,6 +63,9 @@ def buildCommand(args):
 			print("You must specify an executable to run")
 			return ""
 	
+	elif args.list_samples:
+		comDict["command"] = "list samples"
+
 	else:
 		return ""
 
@@ -129,6 +132,7 @@ parser.add_argument("-s", "--sample", help="specify the sample name", action="ap
 parser.add_argument("-e", "--executable", help="specify the path to the executable which will run on the specified samples. Used with --run_jobs")
 parser.add_argument("-o", "--output", help="specify the directory for the file which will contain output from smartsubmit, default is the working directory")
 parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate")
+parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.")
 
 arguments=parser.parse_args()
 

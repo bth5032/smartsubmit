@@ -109,10 +109,20 @@ while True:
 				socket.send_string("running executable '%s' on samples '%s'. \nNOTE: There were multiple samples provided, each will have it's own output file." % (path_to_exe,str(tokens[4:])))
 			else:
 				socket.send_string("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
+		elif command.command == "list files":
+			try:
+				pass
+			except:
+				pass
+			
 		except IndexError:
 			print("error parsing command '%s'" % message)
 			socket.send_string("Error parsing command '%s' " % message)
 	
+	elif command.command == "list samples":
+		pass
+		
+
 	else:
 		logging.error("No action defined for '%s'" % command.command)
 		print("""Error, no action defined for message '%s', allowable actions are:

@@ -192,6 +192,10 @@ class sqlman(object):
 
 		return list_of_samples
 
+	def listFiles(self, VERBOSE=False):
+		"""Returns a human readable list of the SampleFiles directory"""
+		pass
+
 	def listDisks(self, PRINT_OUT=False, SELECT_WORKING=True):
 		"Returns a python list of the disks available for storing files. If PRINT_OUT is true, print the list of machine directories with the"
 		
