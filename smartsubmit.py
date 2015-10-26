@@ -44,7 +44,7 @@ def makeRemoteDir(machine, sample_dir):
 	"""Makes sample_dir on remote machine if it's not already there"""
 
 	ls = subprocess.Popen("ssh %s ls -d %s" % (machine, sample_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-	if ls.readline == sample_dir:
+	if ls.stdout.readline == sample_dir:
 		return True
 	else:
 		mkdir = subprocess.Popen("ssh %s mkdir %s" % (machine, sample_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
