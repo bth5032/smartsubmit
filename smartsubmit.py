@@ -46,7 +46,7 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count=0):
 	if hadoop_path_to_file[:7] == "/hadoop":
 		path_in_hadoop = hadoop_path_to_file[7:]
 	
-	ssh_syntax = "ssh %s hdfs dfs -copyToLocal %s %s " % (Machine, hadoop_path_to_file, sample_dir)
+	ssh_syntax = "ssh %s hdfs dfs -copyToLocal %s %s " % (Machine, path_in_hadoop, sample_dir)
 
 	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
