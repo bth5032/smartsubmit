@@ -48,8 +48,12 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count=0):
 	
 	ssh_syntax = "ssh %s hdfs dfs -copyToLocal %s %s " % (Machine, hadoop_path_to_file, sample_dir)
 
-	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
+	lines_iterator = iter(move_command.stdout.readline, b"")
+    for line in lines_iterator:
+        print(line)
+
 	move_command.wait()
 
 	exit_code = move_command.returncode
@@ -133,7 +137,6 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 	else:
 		print("Sample File not added to table!")
 		return False
-
  
 def absorbDirectory(dir_path, sample_name, NO_OVERWRITE=True):
 	"""Calls absorbSampleFile for each root file in directory. If NO_OVERWRITE is true, files already in the table are skipped"""
