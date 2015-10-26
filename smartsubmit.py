@@ -51,8 +51,8 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count=0):
 	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
 	lines_iterator = iter(move_command.stdout.readline, b"")
-    for line in lines_iterator:
-    	print(line)
+	for line in lines_iterator:
+		print(line)
 
 	move_command.wait()
 
