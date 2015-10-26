@@ -40,13 +40,34 @@ def checkIfComputed(function):
 
 	return return_func
 
-def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count=0):
+def makeRemoteDir(machine, sample_dir):
+	"""Makes sample_dir on remote machine if it's not already there"""
+
+	ls = subprocess.Popen("ssh %s ls -d %s" % (machine, sample_dir))
+	if ls.readline == sample_dir:
+		return True
+	else:
+		mkdir = subprocess.Popen("ssh %s mkdir %s" % (machine, sample_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		exit_code = mkdir.returncode
+		if exit_code == 0:
+			return True
+		else:
+			lines_iterator = iter(mkdir.stdout.readline, b"")
+			for line in lines_iterator:
+				print(line)
+			return False
+
+def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an hdfs dfs command."""
 	
+	if not makeRemoteDir(machine, sample_dir):
+		print("There was an error making the remote directory to house the ntuple. Please try the move again")
+		return False
+
 	if hadoop_path_to_file[:7] == "/hadoop":
 		path_in_hadoop = hadoop_path_to_file[7:]
-	
-	ssh_syntax = "ssh %s hdfs dfs -copyToLocal %s %s " % (Machine, path_in_hadoop, sample_dir)
+
+	ssh_syntax = "ssh %s hdfs dfs -copyToLocal %s %s " % (machine, path_in_hadoop, sample_dir)
 
 	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
@@ -59,12 +80,12 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count=0):
 	exit_code = move_command.returncode
 
 	if exit_code == 0:
-		print("File: %s was moved succesfully! There is a copy at %s:%s" % (os.path.basename(hadoop_path_to_file), Machine, sample_dir))
+		print("File: %s was moved succesfully! There is a copy at %s:%s" % (os.path.basename(hadoop_path_to_file), machine, sample_dir))
 		return True	
 	else:
 		if count < 3:
 			print("There was an error moving the file %s, will try again" % hadoop_path_to_file)
-			return moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count+1)
+			return moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count+1)
 		else:
 			print("There was an error moving the file %s. This was the final attempt, please try to add the file again later." % hadoop_path_to_file)
 			return False
@@ -117,7 +138,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 
 	ret_code = sampleInTable(hadoop_path_to_file, sample_name)
 	if not isinstance(ret_code, int):
-		print("This sample file is already in the database, but under the sample name %s. The file will not be added until the old sample is removed." % ret_code)
+		print("This sample file is already in the database, but under the sample name %s. The file will not be added until the old file is removed." % ret_code)
 		return False
 	elif ret_code == 1:
 		print("The sample is already in the table. The file will not be added again until the old sample is deleted")
