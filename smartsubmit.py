@@ -59,7 +59,7 @@ def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count=0):
 	exit_code = move_command.returncode
 
 	if exit_code == 0:
-		print("File: %s was moved succesfully! There is a copy at %s:%s" % (os.basename(hadoop_path_to_file), Machine, sample_dir))
+		print("File: %s was moved succesfully! There is a copy at %s:%s" % (os.path.basename(hadoop_path_to_file), Machine, sample_dir))
 		return True	
 	else:
 		if count < 3:
