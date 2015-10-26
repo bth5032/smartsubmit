@@ -43,7 +43,9 @@ def checkIfComputed(function):
 def makeRemoteDir(machine, sample_dir):
 	"""Makes sample_dir on remote machine if it's not already there"""
 
-	ls = subprocess.Popen("ssh %s ls -d %s" % (machine, sample_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+	shh_syntax = "ssh %s ls -d %s" % (machine, sample_dir)
+	print ssh_syntax
+	ls = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	out=ls.stdout.readline()
 	print("output: %s" % out)
 	if out == sample_dir:
