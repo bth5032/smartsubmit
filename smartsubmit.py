@@ -40,23 +40,30 @@ def checkIfComputed(function):
 
 	return return_func
 
-def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
-	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an rsync command."""
+def moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count=0):
+	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an hdfs dfs command."""
 	
-	ssh_syntax = "ssh %s rsync --progress %s %s " % (Machine, hadoop_path_to_file, sample_dir)
-
-	rsync = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	if hadoop_path_to_file[:7] == "/hadoop":
+		path_in_hadoop = hadoop_path_to_file[7:]
 	
-	rsync.wait()
+	ssh_syntax = "ssh %s hdfs dfs -copyToLocal %s %s " % (Machine, hadoop_path_to_file, sample_dir)
 
-	exit_code = rsync.returncode
+	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	
+	move_command.wait()
+
+	exit_code = move_command.returncode
 
 	if exit_code == 0:
 		print("File: %s was moved succesfully! There is a copy at %s:%s" % (os.basename(hadoop_path_to_file), Machine, sample_dir))
 		return True	
-	else: 
-		raise RsyncError(exit_code)
-		return False
+	else:
+		if count < 3:
+			print("There was an error moving the file %s, will try again" % hadoop_path_to_file)
+			return moveRemoteFile(Machine, sample_dir, hadoop_path_to_file, count+1)
+		else:
+			print("There was an error moving the file %s. This was the final attempt, please try to add the file again later." % hadoop_path_to_file)
+			return False
 
 def sampleInTable(hadoop_path_to_file, sample_name):
 	"""
