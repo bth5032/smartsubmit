@@ -130,6 +130,10 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 
 	if moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine)
+	else:
+		print("Sample File not added to table!")
+		return False
+
  
 def absorbDirectory(dir_path, sample_name, NO_OVERWRITE=True):
 	"""Calls absorbSampleFile for each root file in directory. If NO_OVERWRITE is true, files already in the table are skipped"""
