@@ -154,8 +154,28 @@ class sqlman(object):
 
 
 		query = """INSERT INTO 
-				SampleFiles(Sample, LocalDirectory, HadoopPath, Filename, CondorID, Machine, Disk_ID, User) 
-				VALUES('%s', '%s', '%s', '%s', (SELECT CondorID FROM Disks WHERE Machine='%s' AND LocalDirectory='%s'), '%s', (SELECT Disk_ID FROM Disks WHERE Machine='%s' And LocalDirectory='%s'), user='%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, localPath, machine, machine, localPath, user)
+				SampleFiles(Sample, 
+					LocalDirectory, 
+					HadoopPath, 
+					Filename, 
+					CondorID, 
+					Machine, 
+					Disk_ID, 
+					User) 
+				VALUES( '%s', 
+						'%s',
+						'%s',
+						'%s',
+						(SELECT CondorID 
+							FROM Disks 
+							WHERE Machine='%s' 
+							AND LocalDirectory='%s'),
+						'%s',
+						(SELECT Disk_ID 
+							FROM Disks 
+							WHERE Machine='%s' 
+							AND LocalDirectory='%s'),
+						'%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, localPath, machine, machine, localPath, user)
 		
 		try:
 			return self.x(query)

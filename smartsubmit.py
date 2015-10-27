@@ -1,4 +1,4 @@
-import sqlman, sqlite3, itertools, os, subprocess, sys
+import sqlman, sqlite3, itertools, os, subprocess, sys, logging
 from custom_errors import RsyncError
 
 
@@ -44,22 +44,34 @@ def makeRemoteDir(machine, sample_dir):
 	"""Makes sample_dir on remote machine if it's not already there"""
 
 	ssh_syntax = "ssh %s ls -d %s" % (machine, sample_dir)
-	print(ssh_syntax)
+	
+	logging.info("Checking for sample directory on %s:%s" %(machine, sample_dir))
+
+	print("Checking for sample directory on %s:%s" %(machine, sample_dir))
 
 	ls = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-	out=ls.stdout.readline()
-	print("output: %s" % out)
+	out=ls.stdout.readline().decode(sys.stdout.encoding).rstrip('\n')
+
 	if str(out) == sample_dir:
+		print("Sample directory found.")
+		logging.info("Sample directory found.")
 		return True
 	else:
+		print("Sample directory not found, attempting to make it.")
+		logging.info("Sample directory not found, attempting to make it.")
 		mkdir = subprocess.Popen("ssh %s mkdir %s" % (machine, sample_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 		exit_code = mkdir.returncode
 		if exit_code == 0:
+			print("Sample directory succesfully made!")
+			logging.info("Sample directory succesfully made!")
 			return True
 		else:
+			print("Sample directory could not be made! Error:")
+			logging.error("Sample directory could not be made! Error:")
 			lines_iterator = iter(mkdir.stdout.readline, b"")
 			for line in lines_iterator:
 				print(line)
+				logging.error(line)
 			return False
 
 def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
@@ -117,7 +129,7 @@ def sampleInTable(hadoop_path_to_file, sample_name):
 			return row[0][0]
 	return 0
 
-def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDirectory = None):
+def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, LocalDirectory = None):
 	"""
 	1. Checks that the sample file is not already in the table
 
@@ -159,7 +171,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, Machine = None, LocalDire
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 
 	if moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
-		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine)
+		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user)
 	else:
 		print("Sample File not added to table!")
 		return False
@@ -303,3 +315,4 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=True):
 		else:
 			print("The sample was not succesfully removed, exit status:")
 			print(exit_code)
+
