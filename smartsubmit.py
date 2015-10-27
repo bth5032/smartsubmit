@@ -1,5 +1,4 @@
 import sqlman, sqlite3, itertools, os, subprocess, sys, logging
-from custom_errors import RsyncError
 
 
 class DiskRing(object):

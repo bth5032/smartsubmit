@@ -7,7 +7,8 @@ class SmartSubmitCommand(object):
 		2. add file
 		3. delete file
 		4. add directory
-		5. delete sample"""
+		5. delete sample
+		6. list sample files"""
 
 	def __init__(self, kwargs):
 		self.user = os.getenv("LOGNAME")
@@ -48,6 +49,9 @@ class SmartSubmitCommand(object):
 				1. sample_name: The sample name which is to be deleted """
 			self.sample = kwarg["sample_name"]
 			self.dir = os.path.dirname(kwargs["path_to_directory"])
+		elif self.command == "list sample files":
+			"""Just list sample files and exit"""
+			pass
 
 	def __repr__(self):
 		return self.__dict__

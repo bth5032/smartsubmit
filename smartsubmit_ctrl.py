@@ -1,5 +1,6 @@
 import zmq, argparse, os, sys
 from ss_com import SmartSubmitCommand
+from prettytable import PrettyTable
 
 def buildCommand(args):
 	command = ""
@@ -64,7 +65,7 @@ def buildCommand(args):
 			return ""
 	
 	elif args.list_samples:
-		comDict["command"] = "list samples"
+		comDict["command"] = "list sample files"
 
 	else:
 		return ""
@@ -111,8 +112,59 @@ def sendCommand(command_obj):
 	# Send command to the server
 	# -----------------------------------------------------------------------
 	socket.send_pyobj(command_obj)
-	message = socket.recv_string()
-	print("Recieved reply: %s" % message)
+
+	return socket.recv_pyobj()
+
+def printSampleFiles(slist, view="Default"):
+	"""Takes in the list of the sample files table from the server and pretty prints it to the screen."""
+
+	if view=="Default":
+		t=PrettyTable(["Sample Name", "File Name", "Owner"])
+		stripped_list = [[x[1], x[3], x[8]] for x in slist]
+		sorted_list = sorted(stripped_list, key=lambda x: x[0])
+		last_sample = sorted_list[0][0]
+		for x in sorted_list:
+			if not x[0] == last_sample:
+				t.add_row(["-----------", "-----------", "-----------"])
+				last_sample = x[0]
+			t.add_row(x)
+
+	elif view=="More":
+		title=["Sample Name", "Local Directory", "Filename", "Machine", "Owner"]
+		t=PrettyTable(title)
+		stripped_list = [[x[1], x[2], x[3], x[5], x[8]] for x in slist]
+		sorted_list = sorted(stripped_list, key=lambda x: x[0])
+		last_sample = sorted_list[0][0]
+		for x in sorted_list:
+			if not x[0] == last_sample:
+				t.add_row(["-----------", "-----------", "-----------", "-----------", "-----------"])
+				last_sample = x[0]
+			t.add_row(x)
+
+	elif view=="Even More":
+		title=["Sample Name", "Local Directory", "Filename", "Hadoop Directory", "Machine", "Owner"]
+		t=PrettyTable(title)
+		stripped_list = [[x[1], x[2], x[3], x[4], x[5], x[8]] for x in slist]
+		sorted_list = sorted(stripped_list, key=lambda x: x[0])
+		last_sample = sorted_list[0][0]
+		for x in sorted_list:
+			if not x[0] == last_sample:
+				t.add_row(["-----------", "-----------", "-----------", "-----------", "-----------", "-----------"])
+				last_sample = x[0]
+			t.add_row(x)
+
+	elif view=="All":
+		title=["File ID", "Sample Name", "Local Directory", "Filename", "Hadoop Directory", "Condor ID", "Machine", "Disk ID", "Owner"]
+		t=PrettyTable(title)
+		sorted_list = sorted(slist, key=lambda x: x[1])
+		last_sample = sorted_list[0][1]
+		for x in sorted_list:
+			if not x[1] == last_sample:
+				t.add_row(["-----------", "-----------", "-----------", "-----------", "-----------", "-----------", "-----------", "-----------", "-----------"])
+				last_sample = x[1]
+			t.add_row(x)
+
+	print(t)	
 
 
 # ------------------------------------------------------
@@ -132,7 +184,9 @@ parser.add_argument("-s", "--sample", help="specify the sample name", action="ap
 parser.add_argument("-e", "--executable", help="specify the path to the executable which will run on the specified samples. Used with --run_jobs")
 parser.add_argument("-o", "--output", help="specify the directory for the file which will contain output from smartsubmit, default is the working directory")
 parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate")
-parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.")
+parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.", action="store_true")
+parser.add_argument("--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
+
 
 arguments=parser.parse_args()
 
@@ -141,8 +195,26 @@ arguments=parser.parse_args()
 command = buildCommand(arguments)
 
 if command: 
-	sendCommand(command)
+	reply = sendCommand(command)
+	if command.command =="list sample files":
+		if arguments.view:
+			if arguments.view == "0":
+				printSampleFiles(reply)
+			elif arguments.view == "1":
+				printSampleFiles(reply, "More")
+			elif arguments.view == "2":
+				printSampleFiles(reply, "Even More")
+			elif arguments.view == "3":
+				printSampleFiles(reply, "All")
+			else:
+				print("unrecognized view code %s, please select from 0,1,2,3. Showing default view:" % arguments.view)
+				printSampleFiles(reply)
+		else:
+			printSampleFiles(reply)
+
+	elif command.command == "run job":
+		print(reply)
+
 else: #the user messed up if empty
 	parser.print_help()
-
 
