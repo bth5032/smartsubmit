@@ -213,7 +213,12 @@ if command:
 			printSampleFiles(reply)
 
 	elif command.command == "run job":
-		print(reply)
+		for sample in command.samples:
+			print("---------")
+			print("Sample: %s" % sample)
+			print("---------")
+			print(reply[sample])
+			print("\n\n\n")
 
 else: #the user messed up if empty
 	parser.print_help()

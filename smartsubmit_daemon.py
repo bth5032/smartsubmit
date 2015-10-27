@@ -87,30 +87,11 @@ while True:
 			socket.send_string("Error parsing command '%s' " % message)
 	
 	elif command.command == "run job":
-		try:
-			path_to_template = tokens[2]
-			path_to_exe = tokens[3]
-			sample_name = tokens[4]
-			tokens=list(filter(None, tokens)) #make sure all tokens are not empty
-			
-			print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
-			t=threading.Thread(name=threadname, target=ss.runJob, args=(path_to_exe, sample_name, path_to_template))
-			tp.printer.add_thread(threadname, outfile)
-			t.start()
-			if len(tokens) > 5: #Running over multiple samples
-				for x in range(5, len(tokens)):
-					threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
-					outfile = open(working_dir+threadname, "w+")
-					sample_name=tokens[x]
-					print("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
-					t=threading.Thread(name=threadname, target=ss.runJob, args=(path_to_exe, sample_name, path_to_template))
-					tp.printer.add_thread(threadname, outfile)
-					t.start()
-				socket.send_string("running executable '%s' on samples '%s'. \nNOTE: There were multiple samples provided, each will have it's own output file." % (path_to_exe,str(tokens[4:])))
-			else:
-				socket.send_string("running executable '%s' on sample '%s'" % (path_to_exe, sample_name))
-		except:
-			pass
+		ret = {}
+		for sample_name in command.samples:
+			ret[sample_name] = ss.computeJob(sample_name)
+		
+		socket.send_pyobj(ret)
 	
 	elif command.command == "list sample files":
 		socket.send_pyobj(ss.man["SampleFiles"])
