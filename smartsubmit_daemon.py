@@ -89,7 +89,7 @@ while True:
 	elif command.command == "run job":
 		ret = {}
 		for sample_name in command.samples:
-			ret[sample_name] = ss.computeJob(sample_name)
+			ret[sample_name] = ss.computeJob(sample_name, command.user)
 		
 		socket.send_pyobj(ret)
 	

@@ -254,7 +254,7 @@ def diskNameFromCondorID(condor_id):
 	else:
 		return None
 
-def computeJob(sample_name):
+def computeJob(sample_name, user):
 	"""Takes in a sample name and returns a list of the (disk, machine) pairs where the samples are stored"""
 	logging.info("Computing condor jobs for sample '%s'" % sample_name)
 	print("Computing condor jobs for sample '%s'" % sample_name)
@@ -277,8 +277,8 @@ def computeJob(sample_name):
 			list_of_jobs.append([machine, path, list_of_files])
 
 
-			print("A condor job has been enumerated. The disk '%s' holds files\n '%s' \n -----------------\n" % (machine+':'+path, str(list_of_files)) )
-			logging.info("A condor job has been enumerated. The disk '%s' holds files\n '%s' \n -----------------\n" % (machine+':'+path, str(list_of_files)))
+			print("A condor job has been enumerated for the user '%s'. The disk '%s' holds files\n '%s' \n -----------------\n" % (user, machine+':'+path, str(list_of_files)) )
+			logging.info("A condor job has been enumerated for the user '%s'. The disk '%s' holds files\n '%s' \n -----------------\n" % (user, machine+':'+path, str(list_of_files)))
 	
 	return list_of_jobs
 

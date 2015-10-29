@@ -62,3 +62,7 @@ target/
 
 # Manually Ignore Files
 *.ignore
+
+#condor stuff
+logs
+condor_submit.tmp

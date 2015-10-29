@@ -1,6 +1,22 @@
-import zmq, argparse, os, sys
+import zmq, argparse, os, sys, subprocess
 from ss_com import SmartSubmitCommand
 from prettytable import PrettyTable
+
+def makeDirs(list_of_samples, parent_dir):
+	"""Makes the log directories for the run job command.
+	====Args====
+	parent_dir: path to the directory that stores the log file tree"""
+	
+	try:
+		if not os.path.isdir(parent_dir):
+			os.mkdir(parent_dir)
+		for sample in list_of_samples:
+			if not os.path.isdir("logs/%s" % sample):
+				os.mkdir("logs/%s" % sample)
+		return True
+	except Exception as err:
+		print(err)
+		return False
 
 def buildCommand(args):
 	command = ""
@@ -72,14 +88,19 @@ def buildCommand(args):
 
 	return SmartSubmitCommand(comDict)
 
-def condorSubmit(command, path_to_template, path_to_executable, condor_id,list_of_files):
+def condorSubmit(job_info, sample):
 	"""Makes a temporary condor submit file using sed to replace tokens in the template file, then calls condor_submit on the processed submit file"""
-
-	(machine, disk) = diskNameFromCondorID(condor_id).split(":")
+	
+	path_to_executable = command.exe_path
+	disk=job_info[1].split('/')[1]
+	path_to_template = command.temp_path
+	machine = job_info[0]
+	list_of_files = job_info[2]
+	
 	space_seperated_list_of_files = " ".join(list_of_files)
 
-	sed_command = "sed -e 's,\$\$__EXECUTABLE__\$\$,%s,g;s,\$\$__PATH_TO_SAMPLE__\$\$,%s,g;s,\$\$__CONDOR_SLOT__\$\$,%s,g;s,\$\$__MACHINE__\$\$,%s,g;s,\$\$__CONDOR_ID__\$\$,%s,g' < %s > condor_submit.tmp" %(path_to_executable, space_seperated_list_of_files, condor_id, machine, condor_id, path_to_template)
-	print("running sed command %s" % sed_command)
+	sed_command = "sed -e 's,\$\$__EXECUTABLE__\$\$,%s,g;s,\$\$__PATH_TO_SAMPLE__\$\$,%s,g;s,\$\$__DISK__\$\$,%s,g;s,\$\$__MACHINE__\$\$,%s,g;s,\$\$__SAMPLE__\$\$,%s,g' < %s > condor_submit.tmp" %(path_to_executable, space_seperated_list_of_files, disk, machine, sample, path_to_template)
+	#print("running sed command %s" % sed_command)
 
 	sed = subprocess.Popen(sed_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	
@@ -88,7 +109,7 @@ def condorSubmit(command, path_to_template, path_to_executable, condor_id,list_o
 	exit_code = sed.returncode
 
 	if not exit_code == 0: #Break if sed error
-		print("There was an error creating the submit file from the template. sed quit with error code %s. Will not attempt to submit job for %s" % (str(exit_code), str(diskNameFromCondorID(condor_id))) )
+		print("There was an error creating the submit file from the template. sed quit with error code %s. Will not attempt to submit job for %s" % (str(exit_code), space_seperated_list_of_files))
 		return exit_code
 
 	condor_submit_command = "condor_submit condor_submit.tmp"
@@ -99,7 +120,9 @@ def condorSubmit(command, path_to_template, path_to_executable, condor_id,list_o
 	exit_code = condor_submit.returncode
 
 	if not exit_code == 0:
-		print(condor_submit.communicate())
+		print(condor_submit.communicate()[1])
+	else:
+		print("Job Queued")
 
 def sendCommand(command_obj):
 	# Set up connection
@@ -166,7 +189,9 @@ def printSampleFiles(slist, view="Default"):
 
 	print(t)	
 
-
+def processSample(list_of_jobs, sample):
+	for job in list_of_jobs:
+		condorSubmit(job, sample)
 # ------------------------------------------------------
 # Start Main 
 # ------------------------------------------------------
@@ -186,13 +211,18 @@ parser.add_argument("-o", "--output", help="specify the directory for the file w
 parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate")
 parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.", action="store_true")
 parser.add_argument("--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
-
+parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/")
 
 arguments=parser.parse_args()
 
 # Construct the command to send to the server.
 # --------------------------------------------------------------------
 command = buildCommand(arguments)
+
+if arguments.log:
+	log_dir = arguments.log
+else:
+	log_dir = 'logs/'
 
 if command: 
 	reply = sendCommand(command)
@@ -213,12 +243,15 @@ if command:
 			printSampleFiles(reply)
 
 	elif command.command == "run job":
-		for sample in command.samples:
-			print("---------")
-			print("Sample: %s" % sample)
-			print("---------")
-			print(reply[sample])
-			print("\n\n\n")
+		if makeDirs(command.samples, log_dir):
+			for sample in command.samples:
+				print("---------")
+				print("Sample: %s" % sample)
+				print("---------")
+				processSample(reply[sample], sample)
+				print("\n\n\n")
+		else:
+			print("Could not make log directories, please check that you have write permissions to the working directory specified: %s" % log_dir)
 
 else: #the user messed up if empty
 	parser.print_help()
