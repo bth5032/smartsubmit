@@ -11,7 +11,7 @@ class SmartSubmitCommand(object):
 		6. list sample files"""
 
 	def __init__(self, kwargs):
-		self.user = os.getenv("LOGNAME")
+		self.user = kwargs["user"]
 		self.time = time.time()
 		self.strftime = time.strftime("%m-%d-%Y_%H:%M:%S")
 

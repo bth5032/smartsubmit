@@ -315,3 +315,15 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=True):
 			print("The sample was not succesfully removed, exit status:")
 			print(exit_code)
 
+def checkDisk(dir, machine):
+	"""Attempts to read a file from the disk"""
+	files_on_disk = man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE Disk_ID = (SELECT Disk_ID From Disks WHERE LocalDirectory='%s' AND Machine='%s')" % (dir, machine))
+	
+	if files_on_disk:
+		path_to_file = files_on_disk[0][0]+files_on_disk[0][1]
+		#ssh_read = "ssh %s head -c "
+		#subprocess.Popen(read_command)
+
+def badDisk(dir, machine):
+	"""Used to correct the database in the case of a bad disk"""
+	checkDisk(dir, machine)

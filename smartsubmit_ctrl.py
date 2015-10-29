@@ -85,6 +85,11 @@ def buildCommand(args):
 
 	else:
 		return ""
+#==========NEED TO FIX THIS!!!============
+	if os.getenv("SMARTSUBMIT_SPOOF_USERNAME"): #Here to support adding files to the DB by smartsubmit user when a file was on a bad disk
+		comDict["user"]=os.getenv("SMARTSUBMIT_SPOOF_USERNAME")
+	else:
+		comDict["user"]=os.getenv("LOGNAME")
 
 	return SmartSubmitCommand(comDict)
 
@@ -130,8 +135,9 @@ def sendCommand(command_obj):
 	port="7584"
 	context = zmq.Context()
 	socket = context.socket(zmq.REQ)
-	socket.connect("tcp://127.0.0.1:%s" % port)
-
+	#socket.connect("tcp://127.0.0.1:%s" % port)
+	socket.connect("tcp://smartsubmit.t2.ucsd.edu:%s" % port)
+	
 	# Send command to the server
 	# -----------------------------------------------------------------------
 	socket.send_pyobj(command_obj)
@@ -212,7 +218,7 @@ parser.add_argument("-t", "--template", help="specify the location of the condor
 parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.", action="store_true")
 parser.add_argument("--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
 parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/")
-
+parser.add_argument("--report_bad_disk". help="Used when a file could not be read by smartsubmit")
 arguments=parser.parse_args()
 
 # Construct the command to send to the server.

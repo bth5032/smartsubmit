@@ -103,7 +103,9 @@ while True:
 	1. add file
 	2. add directory
 	3. delete file
-	4. run job""" % command.command)
+	4. run job
+	5. list sample files
+	6. report bad disk""" % command.command)
 
 	print(command)
 
