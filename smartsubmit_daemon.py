@@ -12,6 +12,8 @@ start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
 logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG)
 logging.info("smartsubmit started at %s" % start_time)
 
+#threading.Thread(target="ss.main")
+
 def processCommand(command):
 	if command.command == "run job":
 		runJob(command)

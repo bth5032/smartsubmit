@@ -244,16 +244,6 @@ def getBestDisk(sample_name):
 
 	return [ {"CondorID": x[2], "Machine" : str(x[3]), "LocalDirectory" :str(x[4])} for x in output ]
 
-def IDsFromSampleName(sample_name):
-	return [x[0] for x in man.x("SELECT Sample_ID FROM SampleFiles WHERE Sample='%s'" % sample_name)]
-
-def diskNameFromCondorID(condor_id):
-	row = man.x("SELECT Machine, LocalDirectory FROM Disks WHERE CondorID='%s'" % condor_id)
-	if row:
-		return "%s:%s" % (row[0][0], row[0][1])
-	else:
-		return None
-
 def computeJob(sample_name, user):
 	"""Takes in a sample name and returns a list of the (disk, machine) pairs where the samples are stored"""
 	logging.info("Computing condor jobs for sample '%s'" % sample_name)
@@ -282,7 +272,7 @@ def computeJob(sample_name, user):
 	
 	return list_of_jobs
 
-def deleteSampleFile(hadoop_path_to_file, user, LAZY=True):
+def deleteSampleFile(hadoop_path_to_file, user, command, LAZY=False):
 	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory"""
 
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)+'/'
@@ -291,12 +281,12 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=True):
 	owner = man.getOwner(hadoop_dir, filename)
 
 	if not owner == user:
-		print("%s can not remove file %s%s, it must be removed by the user who added it: %s" % (user, hadoop_dir, filename, owner))
+		command.message("%s can not remove file %s%s, it should be removed by the user who added it: %s. If you absolutely need to delete the file, you can set SMARTSUBMIT_SPOOF_USERNAME to the user's name." % (user, hadoop_dir, filename, owner))
 		return 
 
 	man.removeSample(hadoop_dir, filename)
 
-	print("The sample was succesfully removed from the table.")
+	logging.info("The sample '%s' was succesfully removed from the table." % hadoop_path_to_file)
 
 	if not LAZY:
 		(machine, local_dir) = man.x("SELECT Machine, LocalDirectory FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))[0]
@@ -310,20 +300,43 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=True):
 		exit_code = rm.returncode
 
 		if exit_code == 0:
-			print("The sample was succesfully deleted from the remote directory")	
+			logging.info("The sample '%s' was succesfully deleted from the remote directory" % hadoop_path_to_file)	
 		else:
-			print("The sample was not succesfully removed, exit status:")
-			print(exit_code)
-
+			logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
+			
 def checkDisk(dir, machine):
 	"""Attempts to read a file from the disk"""
-	files_on_disk = man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE Disk_ID = (SELECT Disk_ID From Disks WHERE LocalDirectory='%s' AND Machine='%s')" % (dir, machine))
-	
+	files_on_disk = man.getFilesOnDisk(dir, machine)
+
 	if files_on_disk:
-		path_to_file = files_on_disk[0][0]+files_on_disk[0][1]
-		#ssh_read = "ssh %s head -c "
-		#subprocess.Popen(read_command)
+		for file_info in files_on_disk:
+			path_to_file = files_on_disk[0][0]+files_on_disk[0][1]
+
+			ssh_read = "ssh %s head -c 1024 %s && tail -c 1024 %s" % (machine, path_to_file, path_to_file)
+			
+			read_bytes = subprocess.Popen(read_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=true)
+			read_bytes.wait()
+			
+			if not read_bytes.exit_code == 0:
+				logging.error("The disk '%s:%s' may have gone down" % (machine,dir))
+				return False
+	else:
+		ssh_syntax = "ssh %s touch %stestfile && cat %stestfile" %(machine, dir, dir)
+		ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=true)
+		
+		ssh.wait()
+		
+		if ssh.exit_code == 0:
+			return True
+		else:
+			logging.error("The disk '%s:%s' may have gone down" %(machine, dir))
+			return False
 
 def badDisk(dir, machine):
 	"""Used to correct the database in the case of a bad disk"""
-	checkDisk(dir, machine)
+	if not checkDisk(dir, machine):
+		man.x("UPDATE Disks SET Working='0' WHERE LocalDirectory='%s' AND Machine='%s'" % (dir, machine))
+		files_on_disk = man.getFilesOnDisk(dir, machine)
+		
+		for file_info in files_on_disk:
+			print("I want to move ")

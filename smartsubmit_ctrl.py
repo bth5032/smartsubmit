@@ -89,7 +89,7 @@ def buildCommand(args):
 	if os.getenv("SMARTSUBMIT_SPOOF_USERNAME"): #Here to support adding files to the DB by smartsubmit user when a file was on a bad disk
 		comDict["user"]=os.getenv("SMARTSUBMIT_SPOOF_USERNAME")
 	else:
-		comDict["user"]=os.getenv("LOGNAME")
+		comDict["user"]=pwd.getpwuid(os.geteuid()).pw_name
 
 	return SmartSubmitCommand(comDict)
 
