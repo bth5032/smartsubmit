@@ -197,16 +197,19 @@ def getBestDisk(sample_name):
 	1. the number of active samples on the disk
 	2. the number of total samples on the disk"""
 
-	query = """Select 
+	#This query is really horrible. 
+
+	query = """Select * From
+				(Select 
 					O.num_same, 
 					Count(SampleFiles.Sample_ID) AS num_total,
-					O.CondorID,
+					O.Disk_ID,
 					O.Machine,
 					O.LocalDirectory
 				From 
 					(SELECT 
 						Count(Distinct S.Sample_ID) AS num_same,
-						Disks.CondorID,
+						Disks.Disk_ID,
 						Disks.Machine,
 						Disks.LocalDirectory
 					FROM 
@@ -217,23 +220,34 @@ def getBestDisk(sample_name):
 						FROM 
 							SampleFiles 
 						WHERE 
-							SampleFiles.Sample="%s") as S
+							SampleFiles.Sample="%s") AS S
 					ON	
 						S.Disk_ID=Disks.Disk_ID 
 					GROUP BY
 						Disks.Disk_ID
 					ORDER BY 
-						Count(S.Sample_ID) ASC) 
-					AS O
+						Count(S.Sample_ID) ASC) AS O
 				LEFT JOIN 
 					SampleFiles 
 				ON 
-					SampleFiles.CondorID = O.CondorID 
+					SampleFiles.Disk_ID = O.Disk_ID 
 				GROUP BY 
-					O.CondorID 
-				ORDER BY 
-					num_same, 
-					num_total ASC;""" % sample_name
+					O.Disk_ID) AS P
+					LEFT JOIN
+					(SELECT 
+						Machine, 
+						Count(Machine) as total_on_machine 
+					FROM 
+						SampleFiles 
+					GROUP BY 
+						Machine) AS K 
+					ON 
+						P.Machine = K.Machine
+					ORDER BY 
+						P.num_same, 
+						P.num_total ASC,
+						K.total_on_machine ASC,
+						P.LocalDirecory;""" % sample_name
 
 	#The query above returns a list of the form 
 	# [Number of Active Sample Files on The Disk, Total Number of Sample Files on the Disk, Condor ID for Disk, Machine Address, Directory on Machine Disk is Mounted]]
@@ -320,6 +334,7 @@ def checkDisk(dir, machine):
 			if not read_bytes.exit_code == 0:
 				logging.error("The disk '%s:%s' may have gone down" % (machine,dir))
 				return False
+		return True
 	else:
 		ssh_syntax = "ssh %s touch %stestfile && cat %stestfile" %(machine, dir, dir)
 		ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=true)

@@ -112,7 +112,7 @@ class sqlman(object):
 		return self.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE Disk_ID = (SELECT Disk_ID From Disks WHERE LocalDirectory='%s' AND Machine='%s')" % (dir, machine))
 
 	def removeSample(self, hadoopDirectory, filename):
-		"""Removes the row from the Disks table corresponding to machine:path and commits the change to the file."""
+		"""Removes the row from the SampleFiles table corresponding to the hadoop path"""
 		try:
 			self.cursor.execute( "DELETE FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoopDirectory, filename))
 			self.connection.commit()
