@@ -26,8 +26,16 @@ def processCommand(command):
 	elif command.command == "delete sample":
 		deleteSample(command)
 
+def addFile(sample, hdp_path, user):
+	"""proxy to smartsubmit.absorbSampleFile, makes sure the file descriptor used for thread printing is closed"""
+	ss.absorbSampleFile(sample, hdp_path, user)
+	tp.closeThreadFile(threading.currentThread().name)
+
 def checkOnJob(jobID):
-	pass
+	
+
+JID=0 #Job ID
+job_files = {}
 
 while True:
 	
@@ -36,25 +44,33 @@ while True:
 	command=socket.recv_pyobj()
 	logging.info("recieved command: '%s' from user %s" % (command.command, command.user))
 
-	threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
+	#threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
 
-	working_dir="/tmp/"
-	outfile_name = working_dir+threadname 
-	outfile=open(outfile_name, "w+")
-	command.outfile = outfile
-	command.outfile_name = outfile_name
+	#working_dir="/tmp/"
+	#outfile_name = working_dir+threadname 
+	#outfile=open(outfile_name, "w+")
+	#command.outfile = outfile
+	#command.outfile_name = outfile_name
 
 
 	if command.command == "add file":
 		
 		try:
-			hadoop_path_to_file = tokens[3]
-			sample_name = tokens[4]
-			print("absorbing sample file '%s' under sample name '%s'" % (hadoop_path_to_file, sample_name))
+			threadname=time.strftime("ss_%s" % JID +"_%m-%d-%Y_%H:%M:%S")
+			
+			working_dir="/tmp/"
+			outfile_name = working_dir+threadname 
+			outfile=open(outfile_name, "w+")
+			job_files[jid] = outfile
+
+			print("absorbing sample file '%s' under sample name '%s' for user'%s'" % (command.hdp_path, command.sample, command.user))
 			tp.printer.add_thread(threadname, outfile)
-			t=threading.Thread(name=threadname, target=ss.absorbSampleFile, args=(sample_name, hadoop_path_to_file))
+			t=threading.Thread(name=threadname, target=addFile, args=(command.sample, command.hdp_path, command.user))
 			tp.add_thread(threadname, outfile)
-			socket.send_string("Absorbing Sample File '%s' into sample '%s'" %(hadoop_path_to_file, sample_name) )
+			
+			socket.send_string(str(JID))
+			JID+=1
+			
 			t.start()
 		except IndexError:
 			print("error parsing command '%s'" % message)
@@ -98,7 +114,10 @@ while True:
 	elif command.command == "list sample files":
 		socket.send_pyobj(ss.man["SampleFiles"])
 		
-
+	elif command.command == "check job":
+		output = checkOnJob(command.jid)
+		socket.send_string(output)
+		
 	else:
 		logging.error("No action defined for '%s'" % command.command)
 		print("""Error, no action defined for message '%s', allowable actions are:
@@ -107,7 +126,8 @@ while True:
 	3. delete file
 	4. run job
 	5. list sample files
-	6. report bad disk""" % command.command)
+	6. report bad disk
+	7. check job""" % command.command)
 
 	print(command)
 

@@ -1,4 +1,4 @@
-import zmq, argparse, os, sys, subprocess
+import zmq, argparse, os, sys, subprocess, pwd
 from ss_com import SmartSubmitCommand
 from prettytable import PrettyTable
 
@@ -83,13 +83,12 @@ def buildCommand(args):
 	elif args.list_samples:
 		comDict["command"] = "list sample files"
 
+#	elif args.report_bad_disk:
+
 	else:
 		return ""
-#==========NEED TO FIX THIS!!!============
-	if os.getenv("SMARTSUBMIT_SPOOF_USERNAME"): #Here to support adding files to the DB by smartsubmit user when a file was on a bad disk
-		comDict["user"]=os.getenv("SMARTSUBMIT_SPOOF_USERNAME")
-	else:
-		comDict["user"]=pwd.getpwuid(os.geteuid()).pw_name
+
+	comDict["user"]=pwd.getpwuid(os.geteuid()).pw_name
 
 	return SmartSubmitCommand(comDict)
 
@@ -135,6 +134,7 @@ def sendCommand(command_obj):
 	port="7584"
 	context = zmq.Context()
 	socket = context.socket(zmq.REQ)
+	socket.setsockopt_string(zmq.IDENTITY, "%s-%s" % (command_obj.time, command_obj.user))
 	#socket.connect("tcp://127.0.0.1:%s" % port)
 	socket.connect("tcp://smartsubmit.t2.ucsd.edu:%s" % port)
 	
@@ -218,7 +218,9 @@ parser.add_argument("-t", "--template", help="specify the location of the condor
 parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.", action="store_true")
 parser.add_argument("--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
 parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/")
-parser.add_argument("--report_bad_disk". help="Used when a file could not be read by smartsubmit")
+#parser.add_argument("--report_bad_disk", help="Used when a file could not be read by smartsubmit")
+parser.add_argument("-c", "--check_job", help="Check on a job with the given job ID. Only used to check the status of file absorbsion.")
+
 arguments=parser.parse_args()
 
 # Construct the command to send to the server.
@@ -232,6 +234,7 @@ else:
 
 if command: 
 	reply = sendCommand(command)
+	
 	if command.command =="list sample files":
 		if arguments.view:
 			if arguments.view == "0":
@@ -258,6 +261,17 @@ if command:
 				print("\n\n\n")
 		else:
 			print("Could not make log directories, please check that you have write permissions to the working directory specified: %s" % log_dir)
+
+	elif command.command == "delete file":
+		
+	elif command.command == "add file":
+		#reply should be the job id
+		print("The file is being moved and added to the database, you can check the status by running ss_ctrl [-c, --check_job] %s" % reply)
+	elif command.command == "check job":
+		#reply is the output thus far.
+		print(reply)
+
+
 
 else: #the user messed up if empty
 	parser.print_help()

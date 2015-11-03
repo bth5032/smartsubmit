@@ -26,11 +26,11 @@ class SmartSubmitCommand(object):
 			self.temp_path = kwargs["path_to_template"]
 		elif self.command == "add file":
 			"""Add a file. Expects 
-					1. path_to_file, a string that gives the location of the .root file on the network drive.
+					1. hdp_path, a string that gives the location of the .root file on the network drive.
 					2. sample, the name of the sample with which to tag the file given"""
 			self.sample = kwargs["sample"]
-			self.filename = os.path.basename(kwargs["path_to_file"])
-			self.dir = os.path.dirname(kwargs["path_to_file"])+'/'
+			self.hdp_path = kwargs["path_to_file"]
+
 		elif self.command == "delete file":
 			"""Delete a file. Expects 
 					1. path_to_file, a string that gives the location of the .root file on the network drive."""
@@ -52,7 +52,8 @@ class SmartSubmitCommand(object):
 		elif self.command == "list sample files":
 			"""Just list sample files and exit"""
 			pass
-
+		elif self.command == "check job":
+			self.jid = kwargs["jid"]
 	def __repr__(self):
 		return self.__dict__
 

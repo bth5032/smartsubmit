@@ -175,7 +175,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		print("Sample File not added to table!")
 		return False
  
-def absorbDirectory(dir_path, sample_name, NO_OVERWRITE=True):
+def absorbDirectory(dir_path, sample_name, user, NO_OVERWRITE=True):
 	"""Calls absorbSampleFile for each root file in directory. If NO_OVERWRITE is true, files already in the table are skipped"""
 
 	if not dir_path[:-1] == '/':
@@ -185,10 +185,10 @@ def absorbDirectory(dir_path, sample_name, NO_OVERWRITE=True):
 		if filename[-5:] == ".root":
 			hadoop_path_to_file=dir_path+filename
 			if(not NO_OVERWRITE):
-				absorbSampleFile(sample_name, hadoop_path_to_file)
+				absorbSampleFile(sample_name, hadoop_path_to_file, user)
 			else:
 				if not sampleInTable(hadoop_path_to_file, sample_name):
-					absorbSampleFile(sample_name, hadoop_path_to_file)
+					absorbSampleFile(sample_name, hadoop_path_to_file, user)
 
 @checkIfComputed
 def getBestDisk(sample_name):
@@ -305,7 +305,7 @@ def deleteSampleFile(hadoop_path_to_file, user, command, LAZY=False):
 			logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
 			
 def checkDisk(dir, machine):
-	"""Attempts to read a file from the disk"""
+	"""Attempts to read all files on a disk, returns true if the reads were succesful. If no files on disk, it writes and reads an empty file."""
 	files_on_disk = man.getFilesOnDisk(dir, machine)
 
 	if files_on_disk:
