@@ -34,8 +34,7 @@ class SmartSubmitCommand(object):
 		elif self.command == "delete file":
 			"""Delete a file. Expects 
 					1. path_to_file, a string that gives the location of the .root file on the network drive."""
-			self.filename = os.path.basename(kwargs["path_to_file"])
-			self.dir = os.path.dirname(kwargs["path_to_directory"])+'/'
+			self.hdp_path = kwargs["path_to_file"]
 		elif self.command == "add directory":
 			"""Add a directory. Expects 
 					1. path_to_directory, a string that gives the location of the folder which holds the .root on hadoop.

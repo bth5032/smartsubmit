@@ -19,25 +19,20 @@ def makeDirs(list_of_samples, parent_dir):
 		return False
 
 def buildCommand(args):
-	command = ""
 	comDict = {}
 
 	if args.absorb_sample:
-		command+="absorb sample "
 		if args.sample:
 			if args.directory:
-				command+="directory "+args.directory+" "
 				comDict["command"] = "add directory"
 				comDict["path_to_directory"] = args.directory
 			elif args.file:
-				command+="file "+args.file+" "
 				comDict["command"] = "add file"
 				comDict["path_to_file"] = args.file
 			else:
 				print("You must specify a file or directory to absorb with -f or -d")
 				return ""
 
-			command+=args.sample[0] #There should not be more than one sample for absorbsion
 			comDict["sample"] = args.sample[0]
 			if len(args.sample) > 1:
 				print("There should only be one sample name specified")
@@ -47,32 +42,24 @@ def buildCommand(args):
 			return ""	
 
 	elif args.delete_sample:
-		command+="delete sample file "
 		comDict["command"] = "delete file"
 		if args.file:
-			command+=args.file+" "
 			comDict["path_to_file"] = args.file
 		else:
 			print("You must specify a hadoop path to the file you want to delete.")
 			return ""
 
 	elif args.run_job:
-		command+="run job "
 		comDict["command"] = "run job"
 		if args.template:
-			command+=args.template+" "
 			comDict["path_to_template"] = args.template
 		else:
-			command+="./condorFileTemplate "
 			comDict["path_to_template"] = "./condorFileTemplate"
 
 		if args.executable:
-			command+=args.executable+" "
 			comDict["path_to_executable"] = args.executable
 			if args.sample:
 				comDict["samples"] = args.sample
-				for sample in args.sample:
-					command+=sample+" "
 			else:
 				print("You must specify a sample to run over")
 				return ""
@@ -83,6 +70,12 @@ def buildCommand(args):
 	elif args.list_samples:
 		comDict["command"] = "list sample files"
 
+	elif args.check_job:
+		comDict["command"] = "check job"
+		try:
+			comDict["jid"] = int(args.check_job)
+		except:
+			print("You must submit an integer greater than 0 as the job id")
 #	elif args.report_bad_disk:
 
 	else:
@@ -135,8 +128,8 @@ def sendCommand(command_obj):
 	context = zmq.Context()
 	socket = context.socket(zmq.REQ)
 	socket.setsockopt_string(zmq.IDENTITY, "%s-%s" % (command_obj.time, command_obj.user))
-	#socket.connect("tcp://127.0.0.1:%s" % port)
-	socket.connect("tcp://smartsubmit.t2.ucsd.edu:%s" % port)
+	socket.connect("tcp://127.0.0.1:%s" % port)
+	#socket.connect("tcp://smartsubmit.t2.ucsd.edu:%s" % port)
 	
 	# Send command to the server
 	# -----------------------------------------------------------------------
@@ -263,13 +256,19 @@ if command:
 			print("Could not make log directories, please check that you have write permissions to the working directory specified: %s" % log_dir)
 
 	elif command.command == "delete file":
-		
+		print(reply)	
+
 	elif command.command == "add file":
 		#reply should be the job id
-		print("The file is being moved and added to the database, you can check the status by running ss_ctrl [-c, --check_job] %s" % reply)
+		print("---------------")
+		print(reply)
+		print("---------------")
+
 	elif command.command == "check job":
 		#reply is the output thus far.
+		print("---------------")
 		print(reply)
+		print("---------------")
 
 
 

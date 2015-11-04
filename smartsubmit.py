@@ -49,7 +49,7 @@ def makeRemoteDir(machine, sample_dir):
 	print("Checking for sample directory on %s:%s" %(machine, sample_dir))
 
 	ls = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-	out=ls.stdout.readline().decode(sys.stdout.encoding).rstrip('\n')
+	out=ls.stdout.readline().decode(sys.__stdout__.encoding).rstrip('\n')
 
 	if str(out) == sample_dir:
 		print("Sample directory found.")
@@ -59,6 +59,7 @@ def makeRemoteDir(machine, sample_dir):
 		print("Sample directory not found, attempting to make it.")
 		logging.info("Sample directory not found, attempting to make it.")
 		mkdir = subprocess.Popen("ssh %s mkdir %s" % (machine, sample_dir), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+		mkdir.wait()
 		exit_code = mkdir.returncode
 		if exit_code == 0:
 			print("Sample directory succesfully made!")
@@ -66,7 +67,7 @@ def makeRemoteDir(machine, sample_dir):
 			return True
 		else:
 			print("Sample directory could not be made! Error:")
-			logging.error("Sample directory could not be made! Error:")
+			logging.error("Sample directory could not be made! Error: %s" % str(exit_code))
 			lines_iterator = iter(mkdir.stdout.readline, b"")
 			for line in lines_iterator:
 				print(line)
@@ -83,13 +84,16 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	if hadoop_path_to_file[:7] == "/hadoop":
 		path_in_hadoop = hadoop_path_to_file[7:]
 
-	ssh_syntax = "ssh %s hdfs dfs -copyToLocal %s %s " % (machine, path_in_hadoop, sample_dir)
+	filename = os.path.basename(hadoop_path_to_file)
+
+	ssh_syntax = "ssh %s \"rm %s%s 2>/dev/null; hdfs dfs -copyToLocal %s %s \"" % (machine, sample_dir, filename, path_in_hadoop, sample_dir)
 
 	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
-	lines_iterator = iter(move_command.stdout.readline, b"")
-	for line in lines_iterator:
-		print(line)
+	# --------Debug move command----------
+	#lines_iterator = iter(move_command.stdout.readline, b"")
+	#for line in lines_iterator:
+	#	print(line)
 
 	move_command.wait()
 
@@ -171,6 +175,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 
 	if moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
 		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user)
+		print("The Sample file has been succesfully absorbed.")
 	else:
 		print("Sample File not added to table!")
 		return False
@@ -204,14 +209,16 @@ def getBestDisk(sample_name):
 					O.num_same, 
 					Count(SampleFiles.Sample_ID) AS num_total,
 					O.Disk_ID,
+					O.LocalDirectory,
 					O.Machine,
-					O.LocalDirectory
+					O.DiskNum
 				From 
 					(SELECT 
 						Count(Distinct S.Sample_ID) AS num_same,
 						Disks.Disk_ID,
+						Disks.LocalDirectory,
 						Disks.Machine,
-						Disks.LocalDirectory
+						Disks.DiskNum
 					FROM 
 						Disks
 					LEFT JOIN 
@@ -222,7 +229,9 @@ def getBestDisk(sample_name):
 						WHERE 
 							SampleFiles.Sample="%s") AS S
 					ON	
-						S.Disk_ID=Disks.Disk_ID 
+						S.Disk_ID=Disks.Disk_ID
+					WHERE
+						Disks.Working='1' 
 					GROUP BY
 						Disks.Disk_ID
 					ORDER BY 
@@ -247,7 +256,7 @@ def getBestDisk(sample_name):
 						P.num_same, 
 						P.num_total ASC,
 						K.total_on_machine ASC,
-						P.LocalDirecory;""" % sample_name
+						P.DiskNum;""" % sample_name
 
 	#The query above returns a list of the form 
 	# [Number of Active Sample Files on The Disk, Total Number of Sample Files on the Disk, Condor ID for Disk, Machine Address, Directory on Machine Disk is Mounted]]
@@ -256,7 +265,7 @@ def getBestDisk(sample_name):
 	
 	#Return list of lists: [Condor ID, Machine, Local Directory]
 
-	return [ {"CondorID": x[2], "Machine" : str(x[3]), "LocalDirectory" :str(x[4])} for x in output ]
+	return [ {"Machine" : str(x[4]), "LocalDirectory" :str(x[3])} for x in output ]
 
 def computeJob(sample_name, user):
 	"""Takes in a sample name and returns a list of the (disk, machine) pairs where the samples are stored"""
@@ -286,7 +295,7 @@ def computeJob(sample_name, user):
 	
 	return list_of_jobs
 
-def deleteSampleFile(hadoop_path_to_file, user, command, LAZY=False):
+def deleteSampleFile(hadoop_path_to_file, user, LAZY=False):
 	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory"""
 
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)+'/'
@@ -294,30 +303,42 @@ def deleteSampleFile(hadoop_path_to_file, user, command, LAZY=False):
 
 	owner = man.getOwner(hadoop_dir, filename)
 
-	if not owner == user:
-		command.message("%s can not remove file %s%s, it should be removed by the user who added it: %s. If you absolutely need to delete the file, you can set SMARTSUBMIT_SPOOF_USERNAME to the user's name." % (user, hadoop_dir, filename, owner))
-		return 
-
-	man.removeSample(hadoop_dir, filename)
-
-	logging.info("The sample '%s' was succesfully removed from the table." % hadoop_path_to_file)
+	message=""
 
 	if not LAZY:
+		message += "Attempting to delete the file from the remote machine\n"
+
 		(machine, local_dir) = man.x("SELECT Machine, LocalDirectory FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))[0]
 
-		ssh_syntax = "ssh %s rm %s " % (machine, hadoop_path_to_file)
+		ssh_syntax = "ssh %s rm %s " % (machine, local_dir+filename)
 
-		rm = subprocess.Popen(ssh_syntax, stdout=sys.stdout, stderr=sys.stderr, shell=True)
+		rm = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 		
 		rm.wait()
 
 		exit_code = rm.returncode
 
 		if exit_code == 0:
+			message += "The sample was succesfully deleted from the remote machine \n"
 			logging.info("The sample '%s' was succesfully deleted from the remote directory" % hadoop_path_to_file)	
 		else:
-			logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
+			message += "The sample could not be deleted. rm failed with error code %s \n" % str(exit_code)
 			
+			logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
+
+	if not owner == user:
+		logging.info("'%s' is removing the file %s%s, but the user who added it is '%s'." % (user, hadoop_dir, filename, owner))
+		message += "The file you are removing was added by the user '%s'.\n" % owner
+		
+
+	man.removeSample(hadoop_dir, filename)
+
+	logging.info("The sample '%s' was succesfully removed from the table." % hadoop_path_to_file)
+
+	message += "The sample was succesfully removed from the table"
+
+	return message
+
 def checkDisk(dir, machine):
 	"""Attempts to read all files on a disk, returns true if the reads were succesful. If no files on disk, it writes and reads an empty file."""
 	files_on_disk = man.getFilesOnDisk(dir, machine)

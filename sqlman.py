@@ -90,13 +90,12 @@ class sqlman(object):
 	def makeDiskTable(self):
 		"""Creates the table SampleFiles, this method should not be used often, it is mainly here to define the schema for the table as well as help with debugging."""
 		try:
-			self.cursor.execute("""CREATE TABLE Disks (
-								    Disk_ID   INTEGER       PRIMARY KEY AUTOINCREMENT,
-								    LocalDirectory VARCHAR (500) NOT NULL,
-								    Machine   VARCHAR (100) NOT NULL,
-								    CondorID  VARCHAR (25) NOT NULL,
-								    Working   BOOLEAN
-								);""")
+			self.cursor.execute("""CREATE TABLE "Disks" (
+									`Disk_ID`	INTEGER PRIMARY KEY AUTOINCREMENT,
+									`LocalDirectory`	varchar(500) NOT NULL,
+									`Machine`	varchar(100) NOT NULL,
+									`DiskNum`	INTEGER NOT NULL,
+									`Working`	Boolean);""")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
@@ -160,8 +159,7 @@ class sqlman(object):
 				SampleFiles(Sample, 
 					LocalDirectory, 
 					HadoopPath, 
-					Filename, 
-					CondorID, 
+					Filename,
 					Machine, 
 					Disk_ID, 
 					User) 
@@ -169,16 +167,12 @@ class sqlman(object):
 						'%s',
 						'%s',
 						'%s',
-						(SELECT CondorID 
-							FROM Disks 
-							WHERE Machine='%s' 
-							AND LocalDirectory='%s'),
 						'%s',
 						(SELECT Disk_ID 
 							FROM Disks 
 							WHERE Machine='%s' 
 							AND LocalDirectory='%s'),
-						'%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, localPath, machine, machine, localPath, user)
+						'%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, machine, localPath, user)
 		
 		try:
 			return self.x(query)
