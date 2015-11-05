@@ -1,3 +1,5 @@
+#!/bin/python
+
 import zmq, argparse, os, sys, subprocess, pwd
 from ss_com import SmartSubmitCommand
 from prettytable import PrettyTable
@@ -88,7 +90,8 @@ def buildCommand(args):
 			return ""
 
 	elif args.report_bad_disk:
-
+		print("This functionality is stil in development")
+		return ""
 	else:
 		return ""
 
@@ -152,6 +155,19 @@ def printSampleFiles(slist, view="Default"):
 	"""Takes in the list of the sample files table from the server and pretty prints it to the screen."""
 
 	if view=="Default":
+		samples= {}
+		stripped_list = [x[1] for x in slist]
+		for x in stripped_list:
+			if x in samples:
+				samples[x] += 1
+			else:
+				samples[x] = 1
+
+		t=PrettyTable(["Sample Name", "Num Files"])		
+		for x in sorted(samples.keys()):
+			t.add_row([x, samples[x]])
+
+	elif view=="Less":
 		t=PrettyTable(["Sample Name", "File Name", "Owner"])
 		stripped_list = [[x[1], x[3], x[8]] for x in slist]
 		sorted_list = sorted(stripped_list, key=lambda x: x[0])
@@ -212,19 +228,18 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument( "--absorb_sample", help="absorb a sample file or directory, must be used with either -d or -f and -s", action="store_true")
 parser.add_argument("--delete_sample", help="delete a sample file from the filesystem, must be used with -f", action="store_true")
-parser.add_argument("--run_job", help="run analysis on sample, must be used with -e and -s", action="store_true")
-parser.add_argument("-f", "--file", help="specify file to add or remove")
-parser.add_argument("-d", "--directory", help="specify directory to absorb")
-parser.add_argument("-s", "--sample", help="specify the sample name", action="append")
+parser.add_argument("--run_job", help="run analysis on sample, must be used with -e and -s, may run over multiple samples by using multiple -s flags", action="store_true")
+parser.add_argument("-f", "--file", help="specify file to add or remove", metavar="PATH_TO_FILE_ON_HADOOP")
+parser.add_argument("-d", "--directory", help="specify directory to absorb", metavar="PATH_TO_DIR_ON_HADOOP")
+parser.add_argument("-s", "--sample", help="specify the sample name", action="append", metavar="SAMPLE_NAME")
 parser.add_argument("-e", "--executable", help="specify the path to the executable which will run on the specified samples. Used with --run_jobs")
-parser.add_argument("-o", "--output", help="specify the directory for the file which will contain output from smartsubmit, default is the working directory")
-parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate")
+parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate", metavar="PATH_TO_TEMPLATE_FILE")
 parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.", action="store_true")
-parser.add_argument("--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
-parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/")
+parser.add_argument("-v","--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
+parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/", metavar="PATH_TO_LOG_FILE")
 #parser.add_argument("--report_bad_disk", help="Used when a file could not be read by smartsubmit")
-parser.add_argument("-c", "--check_job", help="Check on a job with the given job ID. Only used to check the status of file absorbsion.")
-parser.add_argument("--update_file_sample", help="Choose a new name for the sample file specified by -f [hadoop_path]")
+parser.add_argument("-c", "--check_job", help="Check on a job with the given job ID. Only used to check the status of file absorbsion.", metavar="JOB_ID")
+parser.add_argument("--update_file_sample", help="Choose a new name for the sample file specified by -f [hadoop_path]", metavar="NEW_SAMPLE_NAME")
 
 arguments=parser.parse_args()
 
@@ -245,13 +260,15 @@ if command:
 			if arguments.view == "0":
 				printSampleFiles(reply)
 			elif arguments.view == "1":
-				printSampleFiles(reply, "More")
+				printSampleFiles(reply, "Less")
 			elif arguments.view == "2":
-				printSampleFiles(reply, "Even More")
+				printSampleFiles(reply, "More")
 			elif arguments.view == "3":
+				printSampleFiles(reply, "Even More")
+			elif arguments.view == "4":
 				printSampleFiles(reply, "All")
 			else:
-				print("unrecognized view code %s, please select from 0,1,2,3. Showing default view:" % arguments.view)
+				print("unrecognized view code %s, please select from 0,1,2,3,4. Showing default view:" % arguments.view)
 				printSampleFiles(reply)
 		else:
 			printSampleFiles(reply)
@@ -291,8 +308,10 @@ if command:
 		print(reply)
 		print("---------------")
 
-	elif command.command == "update file sample"
-
+	elif command.command == "update file sample":
+		print("---------------")
+		print(reply)
+		print("---------------")
 else: #the user messed up if empty
 	parser.print_help()
 

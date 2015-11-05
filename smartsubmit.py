@@ -96,7 +96,7 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	output = ""
 	lines_iterator = iter(move_command.stdout.readline, b"")
 	for line in lines_iterator:
-		output += line+'\n'
+		output += line.decode(sys.__stdout__.encoding)+'\n'
 
 	move_command.wait()
 
@@ -217,7 +217,9 @@ def absorbDirectory(dir_path, sample_name, user):
 	if status:
 		print("Directory succesfully added")
 	else:
-		print("There were some errors in adding the directory to the database: \n------\n%s" % errors)
+		message = "There were some errors in adding the directory to the database: \n------\n%s" % errors
+		logging.error(message)
+		print(message)
 
 @checkIfComputed
 def getBestDisk(sample_name):

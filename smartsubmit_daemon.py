@@ -14,12 +14,18 @@ logging.info("smartsubmit started at %s" % start_time)
 
 def addFile(sample, hdp_path, user):
 	"""proxy to smartsubmit.absorbSampleFile, makes sure the file descriptor used for thread printing is closed"""
-	ss.absorbSampleFile(sample, hdp_path, user)
+	try:
+		ss.absorbSampleFile(sample, hdp_path, user)
+	except Exception as err:
+		print("There was an error adding the file\n------\n%s" % err)
 	tp.closeThreadFile(threading.currentThread().name)
 
 def addDirectory(sample, hdp_dir, user):
 	"""proxy to smartsubmit.absorbDirectory, makes sure the file descriptor used for thread printing is closed"""
-	ss.absorbDirectory(sample, hdp_dir, user)
+	try:
+		ss.absorbDirectory(sample, hdp_dir, user)
+	except Exception as err:
+		print("There was an error adding the file\n------\n%s" % err)
 	tp.closeThreadFile(threading.currentThread().name)
 
 def checkOnJob(jobID):
@@ -107,8 +113,9 @@ while True:
 
 	elif command.command == "add directory":
 		
-		threadname=time.strftime("ss_%s" % JID +"_%m-%d-%Y_%H:%M:%S")
-			
+		try:
+			threadname=time.strftime("ss_%s" % JID +"_%m-%d-%Y_%H:%M:%S")
+				
 			working_dir="/tmp/"
 			outfile_name = working_dir+threadname 
 			outfile=open(outfile_name, "w+")
@@ -131,7 +138,7 @@ while True:
 				JID+=1
 				
 				t.start()
-		except IndexError:
+		except Exception as err:
 			print("error parsing command '%s'" % message)
 			socket.send_pyobj("Error parsing command '%s' " % message)
 	
