@@ -108,7 +108,7 @@ class sqlman(object):
 		return self.x("SELECT user FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoopDirectory, filename) )[0][0]
 
 	def getFilesOnDisk(self, dir, machine):
-		return self.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE Disk_ID = (SELECT Disk_ID From Disks WHERE LocalDirectory='%s' AND Machine='%s')" % (dir, machine))
+		return self.x("SELECT LocalDirectory, FileName, Sample_ID FROM SampleFiles WHERE Disk_ID = (SELECT Disk_ID From Disks WHERE LocalDirectory='%s' AND Machine='%s')" % (dir, machine))
 
 	def removeSample(self, hadoopDirectory, filename):
 		"""Removes the row from the SampleFiles table corresponding to the hadoop path"""
@@ -146,6 +146,23 @@ class sqlman(object):
 			print("There was an error dropping the table: %s" % err )
 			return None
 
+	def updateSampleName(self, newSample, hadoopDirectory, filename):
+		"""Allows the user to update the sample name of a file."""
+		query = """UPDATE SampleFiles 
+				SET 
+					sample='%s' 
+				WHERE 
+					FileName='%s' 
+				AND 
+					HadoopPath='%s';""" % (newSample, filename, hadoopDirectory)
+		try:
+			self.x(query)
+			return True
+		except sqlite3.OperationalError as err:
+			message = "There was an error adding the sample: %s to the database.\n %s" % (hadoopDirectory, err)
+			print(message)
+			return message
+
 	def addSampleFile(self, sample, filename, localPath, hadoopDirectory, machine, user):
 		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the folder containing the file on the IOSlot slave, hadoopDirectory is the location of the file in Hadoop, machine is the domain name of the slave, and condorID is the condor identifier for the slot associated with the disk."""
 		
@@ -175,10 +192,12 @@ class sqlman(object):
 						'%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, machine, localPath, user)
 		
 		try:
-			return self.x(query)
+			self.x(query)
+			return True
 		except sqlite3.OperationalError as err:
-			print("There was an error adding the sample: %s to the database.\n %s" % (hadoopDirectory, err))
-			return None
+			message = "There was an error adding the sample: %s to the database.\n %s" % (hadoopDirectory, err)
+			print(message)
+			return message
 
 	def addDisk(self, path, machine, condorID, working=1):
 		"""Adds disk to the Disks table"""
@@ -231,3 +250,9 @@ class sqlman(object):
 	def getDict(self):
 		return {"Disks":self.__getitem__("Disks"), "SampleFiles":self.__getitem__("SampleFiles")}
 
+	def working(self, diskID):
+		"""Returns True if the disk with the given ID is tagged as working, False otherwise"""
+		if self.x("Select Working From Disks Where Disk_ID='%s'" % str(disk_id))[0][0] == 0:
+			return False
+		else:
+			return True

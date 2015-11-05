@@ -75,11 +75,13 @@ def makeRemoteDir(machine, sample_dir):
 			return False
 
 def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
-	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an hdfs dfs command."""
+	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an hdfs dfs command.
+	Returns: True if file is moved, a string with the error message if there was an error"""
 	
 	if not makeRemoteDir(machine, sample_dir):
-		print("There was an error making the remote directory to house the ntuple. Please try the move again")
-		return False
+		message = "There was an error making the remote directory to house the ntuple '%s'. Please try the move again" % os.path.basename(hadoop_path_to_file)
+		print(message)
+		return message
 
 	if hadoop_path_to_file[:7] == "/hadoop":
 		path_in_hadoop = hadoop_path_to_file[7:]
@@ -91,9 +93,10 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
 	# --------Debug move command----------
-	#lines_iterator = iter(move_command.stdout.readline, b"")
-	#for line in lines_iterator:
-	#	print(line)
+	output = ""
+	lines_iterator = iter(move_command.stdout.readline, b"")
+	for line in lines_iterator:
+		output += line+'\n'
 
 	move_command.wait()
 
@@ -107,8 +110,9 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 			print("There was an error moving the file %s, will try again" % hadoop_path_to_file)
 			return moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count+1)
 		else:
-			print("There was an error moving the file %s. This was the final attempt, please try to add the file again later." % hadoop_path_to_file)
-			return False
+			message = "There was an error moving the file %s. This was the final attempt, please try to add the file again later. Recieved Error:\n------\n%s" % (os.path.basename(hadoop_path_to_file), output)
+			print(message)
+			return message
 
 def sampleInTable(hadoop_path_to_file, sample_name):
 	"""
@@ -140,7 +144,8 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	
 	3. issues a command to move the file to the machine and adds the file to the table. 
 	
-	Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory."""
+	Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory.
+	Returns: True if the file was absorbed succesfully, a string with the error message on error."""
 
 	#Extract the directory and filename from hadoop_path_to_file
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)
@@ -150,19 +155,22 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	#Check if there is whitespace in the sample_name, this will cause errors with the scheme of putting sample files into /BASEDIR/sample_name
 
 	if ' ' in sample_name:
-		print("There can not be a space in the sample name")
-		return False
+		message = "There can not be a space in the sample name"
+		print(message)
+		return message
  
 	#Check if the record is already in the table. 
 	#Having the same sample file twice will cause issues when we try to run the analysis on every file in a sample. 
 
 	ret_code = sampleInTable(hadoop_path_to_file, sample_name)
 	if not isinstance(ret_code, int):
-		print("This sample file is already in the database, but under the sample name %s. The file will not be added until the old file is removed." % ret_code)
-		return False
+		message = "This sample file %s is already in the database, but under the sample name %s. The file will not be added unless the old file is removed." % (filename, ret_code)
+		print(message)
+		return message
 	elif ret_code == 1:
-		print("The sample is already in the table. The file will not be added again until the old sample is deleted")
-		return False
+		message = "The file %s is already in the table. The file will not be added again unless the old sample is deleted" % filename
+		print(message)
+		return message
 
 	locationData = getBestDisk(sample_name) 
 	
@@ -173,15 +181,28 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 
-	if moveRemoteFile(Machine, sample_dir, hadoop_path_to_file):
-		man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user)
-		print("The Sample file has been succesfully absorbed.")
+	status = moveRemoteFile(Machine, sample_dir, hadoop_path_to_file)
+
+	if status == True:
+		status = man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user)
+		if status == True:
+			print("The Sample file %s has been succesfully absorbed." % filename)
+			logging.info("The Sample file %s has been succesfully absorbed." % filename)
+			return True
+		else:
+			message = "There was an error adding the sample file to the table\n------\n%s" % status
+			print(message)
+			logging.error(message)
+			return message
 	else:
-		print("Sample File not added to table!")
-		return False
+		message = "There was an error moving the file %s into the system. \n------\n" % (filename, status)
+		print(message)
+		logging.error(message)
+		return message
  
-def absorbDirectory(dir_path, sample_name, user, NO_OVERWRITE=True):
-	"""Calls absorbSampleFile for each root file in directory. If NO_OVERWRITE is true, files already in the table are skipped"""
+def absorbDirectory(dir_path, sample_name, user):
+	"""Calls absorbSampleFile for each root file in directory."""
+	errors = "" #Flag for whether the directory was added succesfully
 
 	if not dir_path[:-1] == '/':
 		dir_path += '/'
@@ -189,11 +210,14 @@ def absorbDirectory(dir_path, sample_name, user, NO_OVERWRITE=True):
 	for filename in os.listdir(dir_path):
 		if filename[-5:] == ".root":
 			hadoop_path_to_file=dir_path+filename
-			if(not NO_OVERWRITE):
-				absorbSampleFile(sample_name, hadoop_path_to_file, user)
-			else:
-				if not sampleInTable(hadoop_path_to_file, sample_name):
-					absorbSampleFile(sample_name, hadoop_path_to_file, user)
+			status = absorbSampleFile(sample_name, hadoop_path_to_file, user)
+			if not status == True:
+				errors += status+'\n'
+
+	if status:
+		print("Directory succesfully added")
+	else:
+		print("There were some errors in adding the directory to the database: \n------\n%s" % errors)
 
 @checkIfComputed
 def getBestDisk(sample_name):
@@ -272,7 +296,7 @@ def computeJob(sample_name, user):
 	logging.info("Computing condor jobs for sample '%s'" % sample_name)
 	print("Computing condor jobs for sample '%s'" % sample_name)
 
-	list_of_disks = [ [ y[0], y[1], y[2] ] for y in man.x("SELECT Machine, LocalDirectory, CondorID FROM SampleFiles WHERE Sample='%s' GROUP BY CondorID" % sample_name)]
+	list_of_disks = [ [ y[0], y[1], y[2] ] for y in man.x("SELECT Machine, LocalDirectory, Disk_ID FROM SampleFiles WHERE Sample='%s' GROUP BY Disk_ID" % sample_name)]
 
 	if not list_of_disks:
 		print("There were no files associated with the sample '%s' in the filesystem. Please check the name and try again" % sample_name)
@@ -281,10 +305,15 @@ def computeJob(sample_name, user):
 
 	list_of_jobs = [] # Should be one for each disk
 
-	for (machine, path, condor_id) in list_of_disks:
+	for (machine, path, disk_id) in list_of_disks:
 			
+			#check that disk is working
+			if man.working(disk_id):
+				print("Disk with ID %s contains files in the sample, but is tagged as broken")
+				continue
+
 			#get list of files on that drive
-			list_of_files = [ y[0]+y[1] for y in man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE CondorID = '%s' AND Sample='%s'" % (condor_id, sample_name))]
+			list_of_files = [ y[0]+y[1] for y in man.x("SELECT LocalDirectory, FileName FROM SampleFiles WHERE Disk_ID = '%s' AND Sample='%s'" % (disk_id, sample_name))]
 			
 			#add drive info and list of files on that drive to our job list
 			list_of_jobs.append([machine, path, list_of_files])
@@ -293,7 +322,10 @@ def computeJob(sample_name, user):
 			print("A condor job has been enumerated for the user '%s'. The disk '%s' holds files\n '%s' \n -----------------\n" % (user, machine+':'+path, str(list_of_files)) )
 			logging.info("A condor job has been enumerated for the user '%s'. The disk '%s' holds files\n '%s' \n -----------------\n" % (user, machine+':'+path, str(list_of_files)))
 	
-	return list_of_jobs
+	if list_of_jobs:
+		return list_of_jobs
+	else:
+		return False
 
 def deleteSampleFile(hadoop_path_to_file, user, LAZY=False):
 	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory"""
@@ -308,23 +340,26 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=False):
 	if not LAZY:
 		message += "Attempting to delete the file from the remote machine\n"
 
-		(machine, local_dir) = man.x("SELECT Machine, LocalDirectory FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))[0]
+		(machine, local_dir, disk_id) = man.x("SELECT Machine, LocalDirectory, Disk_ID FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))[0]
 
-		ssh_syntax = "ssh %s rm %s " % (machine, local_dir+filename)
+		if man.working(disk_id):
+			ssh_syntax = "ssh %s rm %s " % (machine, local_dir+filename)
 
-		rm = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-		
-		rm.wait()
-
-		exit_code = rm.returncode
-
-		if exit_code == 0:
-			message += "The sample was succesfully deleted from the remote machine \n"
-			logging.info("The sample '%s' was succesfully deleted from the remote directory" % hadoop_path_to_file)	
-		else:
-			message += "The sample could not be deleted. rm failed with error code %s \n" % str(exit_code)
+			rm = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 			
-			logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
+			rm.wait()
+
+			exit_code = rm.returncode
+
+			if exit_code == 0:
+				message += "The sample was succesfully deleted from the remote machine \n"
+				logging.info("The sample '%s' was succesfully deleted from the remote directory" % hadoop_path_to_file)	
+			else:
+				message += "The sample could not be deleted. rm failed with error code %s \n" % str(exit_code)
+				
+				logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
+		else:
+			logging.info("Will not attempt to remove sample file '%s' from the disk with ID %s because it is tageed as not working." % (hadoop_path_to_file, str(disk_id)))
 
 	if not owner == user:
 		logging.info("'%s' is removing the file %s%s, but the user who added it is '%s'." % (user, hadoop_dir, filename, owner))
@@ -345,7 +380,7 @@ def checkDisk(dir, machine):
 
 	if files_on_disk:
 		for file_info in files_on_disk:
-			path_to_file = files_on_disk[0][0]+files_on_disk[0][1]
+			path_to_file = file_info[0]+file_info[1]
 
 			ssh_read = "ssh %s head -c 1024 %s && tail -c 1024 %s" % (machine, path_to_file, path_to_file)
 			
@@ -368,11 +403,34 @@ def checkDisk(dir, machine):
 			logging.error("The disk '%s:%s' may have gone down" %(machine, dir))
 			return False
 
-def badDisk(dir, machine):
+def moveToWorkingDisk(machine, local_dir, filename, sample_id):
+	"""removes the file specified and then adds it to the table again"""
+	(sample, hadoop_dir, user) = man.x("SELECT Sample, HadoopPath, User FROM SampleFiles WHERE Sample_ID='%d'" % sample_id)
+
+	hdp_path = hadoop_dir+filename 
+	deleteSampleFile(hdp_path, "smartsubmit", LAZY=True)
+	absorbSampleFile(sample, hdp_path, user) 
+
+def badDisk(dirname, machine):
 	"""Used to correct the database in the case of a bad disk"""
-	if not checkDisk(dir, machine):
-		man.x("UPDATE Disks SET Working='0' WHERE LocalDirectory='%s' AND Machine='%s'" % (dir, machine))
-		files_on_disk = man.getFilesOnDisk(dir, machine)
-		
-		for file_info in files_on_disk:
-			print("I want to move ")
+	man.x("UPDATE Disks SET Working='0' WHERE LocalDirectory='%s' AND Machine='%s'" % (dirname, machine))
+	files_on_disk = man.getFilesOnDisk(dirname, machine)
+	
+	for file_info in files_on_disk:
+		moveToWorkingDisk(machine, file_info[0], file_info[1], file_info[2])
+
+def updateSampleName(hdp_path, new_name):
+	"""Updates the sample name of a file in the table"""
+	filename = os.path.basename(hdp_path)
+	dirname = os.path.dirname(hdp_path)+'/'
+	output = man.updateSampleName(new_name, dirname, filename)
+	if output == True:
+		message = "The sample name of the file %s was updates succesfully" % filename 
+		logging.info(message)
+		print(message)
+		return message
+	else:
+		message = "There was an error updating the sample name\n------\n%s" % output
+		logging.error(message)
+		print(message)
+		return message

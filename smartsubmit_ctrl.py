@@ -76,7 +76,18 @@ def buildCommand(args):
 			comDict["jid"] = int(args.check_job)
 		except:
 			print("You must submit an integer greater than 0 as the job id")
-#	elif args.report_bad_disk:
+			return ""
+
+	elif args.update_file_sample:
+		comDict["command"] = "update file sample"
+		comDict["new_name"] = args.update_file_sample
+		if args.file:
+			comDict["file"] = args.file
+		else:
+			print("You must specify the hadoop path to the file whose sample name you want changed with -f")
+			return ""
+
+	elif args.report_bad_disk:
 
 	else:
 		return ""
@@ -213,6 +224,7 @@ parser.add_argument("--view", help="Select how much information to display on ea
 parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/")
 #parser.add_argument("--report_bad_disk", help="Used when a file could not be read by smartsubmit")
 parser.add_argument("-c", "--check_job", help="Check on a job with the given job ID. Only used to check the status of file absorbsion.")
+parser.add_argument("--update_file_sample", help="Choose a new name for the sample file specified by -f [hadoop_path]")
 
 arguments=parser.parse_args()
 
@@ -246,12 +258,15 @@ if command:
 
 	elif command.command == "run job":
 		if makeDirs(command.samples, log_dir):
-			for sample in command.samples:
-				print("---------")
-				print("Sample: %s" % sample)
-				print("---------")
-				processSample(reply[sample], sample)
-				print("\n\n\n")
+			if reply[sample] == False:
+				print("There are no files on working disks that are associated with that sample. If you are sure the files are on the disks, either remove the old files and add them again, or wait for the disk to come back up.")
+			else:
+				for sample in command.samples:
+					print("---------")
+					print("Sample: %s" % sample)
+					print("---------")
+					processSample(reply[sample], sample)
+					print("\n\n\n")
 		else:
 			print("Could not make log directories, please check that you have write permissions to the working directory specified: %s" % log_dir)
 
@@ -259,7 +274,13 @@ if command:
 		print(reply)	
 
 	elif command.command == "add file":
-		#reply should be the job id
+		#reply should be message with the job id
+		print("---------------")
+		print(reply)
+		print("---------------")
+
+	elif command.command == "add directory":
+		#reply should be message with the job id
 		print("---------------")
 		print(reply)
 		print("---------------")
@@ -270,7 +291,7 @@ if command:
 		print(reply)
 		print("---------------")
 
-
+	elif command.command == "update file sample"
 
 else: #the user messed up if empty
 	parser.print_help()
