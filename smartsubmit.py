@@ -203,16 +203,15 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 def listdir(path):
 	"""Lists the contents of files in a hadoop directory"""
 
-	hdp_path = path[7:] #Strip off leading /hadoop
+	hdp_path = path[7:] if path[:7] == "/hadoop" else path #Strip off leading /hadoop
 
-	ls_syntax = "hdfs -dfs %s | sed 's,.*/\\(.*\\)$,\\1,g'" % hdp_path
+	ls_syntax = "hdfs dfs -ls %s | sed 's,.*/\\(.*\\)$,\\1,g'" % hdp_path
 
 	ls = subprocess.Popen(ls_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
 	out=ls.communicate()
 
-	return out[0].split('\n')
-
+	return out[0].split('\n')[1:-1]
 
 def absorbDirectory(dir_path, sample_name, user):
 	"""Calls absorbSampleFile for each root file in directory."""
