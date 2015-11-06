@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python
 
 import zmq, argparse, os, sys, subprocess, pwd
 from ss_com import SmartSubmitCommand
@@ -142,8 +142,8 @@ def sendCommand(command_obj):
 	context = zmq.Context()
 	socket = context.socket(zmq.REQ)
 	socket.setsockopt_string(zmq.IDENTITY, "%s-%s" % (command_obj.time, command_obj.user))
-	socket.connect("tcp://127.0.0.1:%s" % port)
-	#socket.connect("tcp://smartsubmit.t2.ucsd.edu:%s" % port)
+	#socket.connect("tcp://127.0.0.1:%s" % port)
+	socket.connect("tcp://smartsubmit.t2.ucsd.edu:%s" % port)
 	
 	# Send command to the server
 	# -----------------------------------------------------------------------
