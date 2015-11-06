@@ -74,6 +74,26 @@ def makeRemoteDir(machine, sample_dir):
 				logging.error(line)
 			return False
 
+def checkType(hdp_path):
+	"""return dir or file depending on whether the object at hdp_path is a dir or file. False if the file does not exist. Used to make sure the user specifies the right path when they want to add a dir or file"""
+
+	hdp_path = path[7:] if path[:7] == "/hadoop" else path #Strip off leading /hadoop
+
+	test_syntax = "hdfs dfs -test -d %s" % hdp_path
+
+	test = subprocess.Popen(test_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+	
+	out=test.communicate()
+
+	if "No such file or directory" in out[0]:
+		return False
+
+	elif test.exit_code == 0:
+		return "dir"
+
+	elif test.exit_code == 1:
+		return "file"
+
 def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an hdfs dfs command.
 	Returns: True if file is moved, a string with the error message if there was an error"""
@@ -158,6 +178,17 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		message = "There can not be a space in the sample name"
 		print(message)
 		return message
+
+	#Check that the file exists:
+	exists = checkType(hadoop_path_to_file)
+	if exists == "dir":
+		message = "The specified path '%s' points to a directory, please use add directory." % (hadoop_path_to_file)
+		print(message)
+		return message
+	elif exists == False:
+		message = "The specified path '%s' does not exist." % (hadoop_path_to_file)
+		print(message)
+		return message
  
 	#Check if the record is already in the table. 
 	#Having the same sample file twice will cause issues when we try to run the analysis on every file in a sample. 
@@ -217,23 +248,27 @@ def absorbDirectory(dir_path, sample_name, user):
 	"""Calls absorbSampleFile for each root file in directory."""
 	errors = "" #Flag for whether the directory was added succesfully
 
-	if not dir_path[:-1] == '/':
-		dir_path += '/'
+	if checkType(dir_path) == "dir":
 
-	for filename in listdir(dir_path):
-		if filename[-5:] == ".root":
-			hadoop_path_to_file=dir_path+filename
-			status = absorbSampleFile(sample_name, hadoop_path_to_file, user)
-			if not status == True:
-				errors += status+'\n'
+		if not dir_path[:-1] == '/':
+			dir_path += '/'
 
-	if status:
-		print("Directory succesfully added")
+		for filename in listdir(dir_path):
+			if filename[-5:] == ".root":
+				hadoop_path_to_file=dir_path+filename
+				status = absorbSampleFile(sample_name, hadoop_path_to_file, user)
+				if not status == True:
+					errors += status+'\n'
+
+		if status:
+			print("Directory succesfully added")
+		else:
+			message = "There were some errors in adding the directory to the database: \n------\n%s" % errors
+			logging.error(message)
+			print(message)
 	else:
-		message = "There were some errors in adding the directory to the database: \n------\n%s" % errors
-		logging.error(message)
-		print(message)
-
+		print("The path specified is not a valid directory")
+		logging.info("The user %s tried to add a non valid directory '%s'" % (user, dir_path))
 @checkIfComputed
 def getBestDisk(sample_name):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
