@@ -45,6 +45,7 @@
 ./smartsubmit_ctrl.py --run_job -s ttbar_powheg_pythia8_50ns -e /path/to/exe
 ## Run a job with a real exe
 ./smartsubmit_ctrl.py --run_job -s ttbar_powheg_pythia8_50ns -e /nfs-7/t2tas/test_executable
+## Run a job with a fake sample name
 ./smartsubmit_ctrl.py --run_job -s fake_sample -e /nfs-7/t2tas/test_executable
 
 ##### UPDATE SAMPLE NAMES #####

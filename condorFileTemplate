@@ -14,6 +14,6 @@ Executable = $$__EXECUTABLE__$$
 Transfer_executable = True
 arguments = $$__PATH_TO_SAMPLE__$$
 
-RequiredUCSDHostname =?= "$$__MACHINE__$$"
++RequiredUCSDHostname = "$$__MACHINE__$$"
 
 Queue 1
