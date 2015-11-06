@@ -375,8 +375,8 @@ def computeJob(sample_name, user):
 	for (machine, path, disk_id) in list_of_disks:
 			
 			#check that disk is working
-			if man.working(disk_id):
-				print("Disk with ID %s contains files in the sample, but is tagged as broken")
+			if not man.working(disk_id):
+				print("Disk with ID %s contains files in the sample, but is tagged as broken" % disk_id)
 				continue
 
 			#get list of files on that drive
