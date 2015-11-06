@@ -274,10 +274,10 @@ if command:
 
 	elif command.command == "run job":
 		if makeDirs(command.samples, log_dir):
-			if reply[sample] == False:
-				print("There are no files on working disks that are associated with that sample. If you are sure the files are on the disks, either remove the old files and add them again, or wait for the disk to come back up.")
-			else:
-				for sample in command.samples:
+			for sample in command.samples:
+				if reply[sample] == False:
+					print("There are no files on working disks that are associated with sample '%s'. If you are sure the files are on the disks(use --list_samples), either remove the old files and add them again, or wait for the disk to come back up." % sample)
+				else:
 					print("---------")
 					print("Sample: %s" % sample)
 					print("---------")
