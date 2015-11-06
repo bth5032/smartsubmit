@@ -200,6 +200,20 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		logging.error(message)
 		return message
  
+def listdir(path):
+	"""Lists the contents of files in a hadoop directory"""
+
+	hdp_path = path[7:] #Strip off leading /hadoop
+
+	ls_syntax = "hdfs -dfs %s | sed 's,.*/\\(.*\\)$,\\1,g'" % hdp_path
+
+	ls = subprocess.Popen(ls_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+	
+	out=ls.communicate()
+
+	return out[0].split('\n')
+
+
 def absorbDirectory(dir_path, sample_name, user):
 	"""Calls absorbSampleFile for each root file in directory."""
 	errors = "" #Flag for whether the directory was added succesfully
@@ -207,7 +221,7 @@ def absorbDirectory(dir_path, sample_name, user):
 	if not dir_path[:-1] == '/':
 		dir_path += '/'
 
-	for filename in os.listdir(dir_path):
+	for filename in listdir(dir_path):
 		if filename[-5:] == ".root":
 			hadoop_path_to_file=dir_path+filename
 			status = absorbSampleFile(sample_name, hadoop_path_to_file, user)
