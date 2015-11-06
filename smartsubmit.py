@@ -25,6 +25,8 @@ working_dir = "."
 connection = sqlite3.connect(database_file, check_same_thread=False)
 man = sqlman.sqlman(connection, database_file, working_dir)
 
+active_files = [] #holds a list of the files that are in the process of being added 
+
 def checkIfComputed(function):
 	disks = DiskRing("A", [1,2,3])
 	def return_func(sample_name):
@@ -167,6 +169,13 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory.
 	Returns: True if the file was absorbed succesfully, a string with the error message on error."""
 
+	if hadoop_path_to_file in active_files:
+		message = "The file %s is in the process of being added in another thread" % os.path.basename(hadoop_path_to_file)
+		print(message)
+		return message
+	else:
+		active_files.append(hadoop_path_to_file)
+
 	#Extract the directory and filename from hadoop_path_to_file
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)
 	filename = os.path.basename(hadoop_path_to_file)
@@ -177,15 +186,18 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	if ' ' in sample_name:
 		message = "There can not be a space in the sample name"
 		print(message)
+		active_files.remove(hadoop_path_to_file)
 		return message
 
 	#Check that the file exists:
 	exists = checkType(hadoop_path_to_file)
 	if exists == "dir":
+		active_files.remove(hadoop_path_to_file)
 		message = "The specified path '%s' points to a directory, please use add directory." % (hadoop_path_to_file)
 		print(message)
 		return message
 	elif exists == False:
+		active_files.remove(hadoop_path_to_file)
 		message = "The specified path '%s' does not exist." % (hadoop_path_to_file)
 		print(message)
 		return message
@@ -197,10 +209,12 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	if not isinstance(ret_code, int):
 		message = "This sample file %s is already in the database, but under the sample name %s. The file will not be added unless the old file is removed." % (filename, ret_code)
 		print(message)
+		active_files.remove(hadoop_path_to_file)
 		return message
 	elif ret_code == 1:
 		message = "The file %s is already in the table. The file will not be added again unless the old sample is deleted" % filename
 		print(message)
+		active_files.remove(hadoop_path_to_file)
 		return message
 
 	locationData = getBestDisk(sample_name) 
@@ -219,16 +233,19 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		if status == True:
 			print("The Sample file %s has been succesfully absorbed." % filename)
 			logging.info("The Sample file %s has been succesfully absorbed." % filename)
+			active_files.remove(hadoop_path_to_file)
 			return True
 		else:
 			message = "There was an error adding the sample file to the table\n------\n%s" % status
 			print(message)
 			logging.error(message)
+			active_files.remove(hadoop_path_to_file)
 			return message
 	else:
 		message = "There was an error moving the file %s into the system. \n------\n" % (filename, status)
 		print(message)
 		logging.error(message)
+		active_files.remove(hadoop_path_to_file)
 		return message
  
 def listdir(path):
