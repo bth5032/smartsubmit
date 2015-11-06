@@ -252,7 +252,7 @@ class sqlman(object):
 
 	def working(self, diskID):
 		"""Returns True if the disk with the given ID is tagged as working, False otherwise"""
-		if self.x("Select Working From Disks Where Disk_ID='%s'" % str(disk_id))[0][0] == 0:
+		if self.x("Select Working From Disks Where Disk_ID='%s'" % str(diskID))[0][0] == 0:
 			return False
 		else:
 			return True
