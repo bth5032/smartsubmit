@@ -449,25 +449,30 @@ def checkDisk(dir, machine):
 		for file_info in files_on_disk:
 			path_to_file = file_info[0]+file_info[1]
 
-			ssh_read = "ssh %s head -c 1024 %s && tail -c 1024 %s" % (machine, path_to_file, path_to_file)
+			ssh_syntax = "ssh %s \"head -c 1024 %s && tail -c 1024 %s\"" % (machine, path_to_file, path_to_file)
 			
-			read_bytes = subprocess.Popen(read_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=true)
+			read_bytes = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 			read_bytes.wait()
+
+			logging.info("Reading file '%s' on '%s'" % (path_to_file, machine))
 			
-			if not read_bytes.exit_code == 0:
-				logging.error("The disk '%s:%s' may have gone down" % (machine,dir))
+			if not read_bytes.returncode == 0:
+				logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir, str(read_bytes.communicate()[0])))
+
 				return False
 		return True
 	else:
-		ssh_syntax = "ssh %s touch %stestfile && cat %stestfile" %(machine, dir, dir)
-		ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=true)
+		ssh_syntax = "ssh %s \"touch %stestfile && cat %stestfile\"" %(machine, dir, dir)
+		ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 		
 		ssh.wait()
 		
-		if ssh.exit_code == 0:
+		logging.info("touching file '%stestfile' on '%s'" % (dir, machine))
+
+		if ssh.returncode == 0:
 			return True
 		else:
-			logging.error("The disk '%s:%s' may have gone down" %(machine, dir))
+			logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir, str(ssh.communicate()[0])))
 			return False
 
 def moveToWorkingDisk(machine, local_dir, filename, sample_id):
