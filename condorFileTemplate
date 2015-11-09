@@ -11,7 +11,7 @@ notify_user = bthashemi@ucsd.edu
 x509userproxy = /tmp/x509up_u31589
 
 Executable = $$__EXECUTABLE__$$
-Transfer_executable = True
+Transfer_executable = False
 arguments = $$__PATH_TO_SAMPLE__$$
 
 +RequiredUCSDHostname = "$$__MACHINE__$$"
