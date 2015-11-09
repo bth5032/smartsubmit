@@ -23,9 +23,8 @@ start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
 logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG)
 logging.info("smartsubmit started at %s" % start_time)
 
-logging.info("")
-
 def emailAdmins(message_body):
+	logging.info("Sending message to admins: \n------\n%s" % message_body)
 	server = smtplib.SMTP('smtp.ucsd.edu', 587)
 	server.starttls()
 	server.login(username, password)

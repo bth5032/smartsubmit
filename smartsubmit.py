@@ -449,7 +449,7 @@ def checkDisk(dir, machine):
 		for file_info in files_on_disk:
 			path_to_file = file_info[0]+file_info[1]
 
-			ssh_syntax = "ssh %s \"head -c 1024 %s && tail -c 1024 %s\"" % (machine, path_to_file, path_to_file)
+			ssh_syntax = "ssh %s \"head -c 1024 %s && tail -c 1024 %s\"" % (machine, path_to_file, path_to_file)			
 			
 			read_bytes = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 			read_bytes.wait()
