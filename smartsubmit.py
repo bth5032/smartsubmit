@@ -442,7 +442,7 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=False):
 	return message
 
 def checkDisk(dir, machine):
-	"""Attempts to read all files on a disk, returns true if the reads were succesful. If no files on disk, it writes and reads an empty file."""
+	"""Attempts to read all files on a disk, returns true if the reads were succesful. If no files on disk, it writes and reads an empty file. Returns output of ssh on failure"""
 	files_on_disk = man.getFilesOnDisk(dir, machine)
 
 	if files_on_disk:
@@ -456,10 +456,11 @@ def checkDisk(dir, machine):
 
 			logging.info("Reading file '%s' on '%s'" % (path_to_file, machine))
 			
+			output = read_bytes.communicate()[0]
 			if not read_bytes.returncode == 0:
-				logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir, str(read_bytes.communicate()[0])))
+				logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir,output))
 
-				return False
+				return output
 		return True
 	else:
 		ssh_syntax = "ssh %s \"touch %stestfile && cat %stestfile\"" %(machine, dir, dir)
@@ -469,11 +470,14 @@ def checkDisk(dir, machine):
 		
 		logging.info("touching file '%stestfile' on '%s'" % (dir, machine))
 
+		output = ssh.communicate()[0]
+
 		if ssh.returncode == 0:
 			return True
 		else:
-			logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir, str(ssh.communicate()[0])))
-			return False
+			logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir,output))
+
+			return output
 
 def moveToWorkingDisk(machine, local_dir, filename, sample_id):
 	"""removes the file specified and then adds it to the table again"""
