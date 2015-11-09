@@ -52,7 +52,7 @@ def diskCheckHelper():
 					message += "The disk mounted at '%s' on '%s'  may have gone down.\n%s\n" % (directory, machine, result)
 		if message:
 			emailAdmins(message)
-		time.sleep(60)
+		time.sleep(60*60*6)
 
 def addFile(sample, hdp_path, user):
 	"""proxy to smartsubmit.absorbSampleFile, makes sure the file descriptor used for thread printing is closed"""
