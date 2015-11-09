@@ -2,6 +2,7 @@ import smartsubmit as ss
 import thread_printing as tp
 import zmq, time, threading, logging
 from ss_com import SmartSubmitCommand
+import getpass
 
 ## Email Stuff
 import smtplib 
@@ -10,8 +11,8 @@ import email.utils as eutils
 
 
 admins = [["Bobak Hashemi", "bthashemi@ucsd.edu"]]
-username = ""
-password = ""
+username = "bthashem"
+password = getpass.getpass()
 
 
 context = zmq.Context()
@@ -93,7 +94,7 @@ def checkOnJob(jobID):
 JID=0 #Job ID
 job_files = {}
 
-disk_check=threading.Thread(name="disk_check", target=diskCheckHelper, Daemon=True)
+disk_check=threading.Thread(name="disk_check", target=diskCheckHelper, daemon=True)
 disk_check.start()
 
 while True:
