@@ -94,7 +94,8 @@ def checkOnJob(jobID):
 JID=0 #Job ID
 job_files = {}
 
-disk_check=threading.Thread(name="disk_check", target=diskCheckHelper, daemon=True)
+disk_check=threading.Thread(name="disk_check", target=diskCheckHelper)
+disk_check.setDaemon(True)
 disk_check.start()
 
 while True:
