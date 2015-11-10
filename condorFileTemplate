@@ -15,5 +15,6 @@ Transfer_executable = False
 arguments = $$__PATH_TO_SAMPLE__$$
 
 +RequiredUCSDHostname = "$$__MACHINE__$$"
++IOSlot = True
 
 Queue 1
