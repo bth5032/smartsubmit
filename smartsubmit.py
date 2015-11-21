@@ -79,7 +79,7 @@ def makeRemoteDir(machine, sample_dir):
 def checkType(hdp_path):
 	"""return dir or file depending on whether the object at hdp_path is a dir or file. False if the file does not exist. Used to make sure the user specifies the right path when they want to add a dir or file"""
 
-	hdp_path = path[7:] if path[:7] == "/hadoop" else path #Strip off leading /hadoop
+	hdp_path = hdp_path[7:] if hdp_path[:7] == "/hadoop" else hdp_path #Strip off leading /hadoop
 
 	test_syntax = "hdfs dfs -test -d %s" % hdp_path
 
