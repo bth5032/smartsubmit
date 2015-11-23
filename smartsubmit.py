@@ -265,7 +265,9 @@ def absorbDirectory(dir_path, sample_name, user):
 	"""Calls absorbSampleFile for each root file in directory."""
 	errors = "" #Flag for whether the directory was added succesfully
 
-	if checkType(dir_path) == "dir":
+	loc_type = checkType(dir_path) #Check if specified path points to a directory
+
+	if loc_type == "dir":
 
 		if not dir_path[:-1] == '/':
 			dir_path += '/'
@@ -284,7 +286,7 @@ def absorbDirectory(dir_path, sample_name, user):
 			logging.error(message)
 			print(message)
 	else:
-		print("The path specified is not a valid directory")
+		print("The path specified, '%s', is not a valid directory. Checktype returned %s" % (dir_path, str(loc_type)))
 		logging.info("The user %s tried to add a non valid directory '%s'" % (user, dir_path))
 @checkIfComputed
 def getBestDisk(sample_name):
