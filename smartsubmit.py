@@ -286,8 +286,9 @@ def absorbDirectory(dir_path, sample_name, user):
 			logging.error(message)
 			print(message)
 	else:
-		print("The path specified, '%s', is not a valid directory. Checktype returned %s" % (dir_path, str(loc_type)))
+		print("The path specified, '%s', is not a valid directory. Recieved %s from checktype, should get 'dir' for directory." % (dir_path, str(loc_type)))
 		logging.info("The user %s tried to add a non valid directory '%s'" % (user, dir_path))
+
 @checkIfComputed
 def getBestDisk(sample_name):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	

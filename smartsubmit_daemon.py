@@ -177,7 +177,7 @@ while True:
 				socket.send_pyobj(message)
 			else:
 				tp.printer.add_thread(threadname, outfile)
-				t=threading.Thread(name=threadname, target=addDirectory, args=(command.sample, command.dir, command.user))
+				t=threading.Thread(name=threadname, target=addDirectory, args=(command.dir, command.sample, command.user))
 				tp.printer.add_thread(threadname, outfile)
 				
 				socket.send_pyobj("The directory is being absorbed into the system and added to the database, you can check the status by running ss_ctrl [-c, --check_job] %s" % str(JID))
