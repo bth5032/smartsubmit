@@ -85,13 +85,17 @@ def checkOnJob(jobID):
 	return reply
 
 def run_server():
+	"""Runs the zeromq server and handles all the jobs"""
+	#Set up job tracking
+	JID=0 #Job ID
+	job_files = {}
 
 	#Connect to server
+	
 	context = zmq.Context()
 	port="7584"
 	socket=context.socket(zmq.REP)
 	socket.bind("tcp://*:%s" % port)
-	
 
 	while True:
 
@@ -236,9 +240,6 @@ def checkPass():
 password_accepted = checkPass()
 
 if password_accepted:
-	JID=0 #Job ID
-	job_files = {}
-
 	disk_check=threading.Thread(name="disk_check", target=diskCheckHelper)
 	disk_check.setDaemon(True)
 	disk_check.start()
