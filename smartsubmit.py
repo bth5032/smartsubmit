@@ -90,10 +90,12 @@ def checkType(hdp_path):
 	if "No such file or directory" in out[0]:
 		return False
 
-	elif test.exit_code == 0:
+	exit_code = test.returncode
+
+	elif exit_code == 0:
 		return "dir"
 
-	elif test.exit_code == 1:
+	elif exit_code == 1:
 		return "file"
 
 def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):

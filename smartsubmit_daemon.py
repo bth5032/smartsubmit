@@ -24,6 +24,7 @@ logging.info("smartsubmit started at %s" % start_time)
 log_disk_helper = logging.getLogger("diskCheckHelper")
 log_disk_helper.setLevel(logging.DEBUG)
 log_disk_helper.addHandler(logging.FileHandler("diskCheckHelper_%s.log" % start_time))
+log_disk_helper.propagate=0
 
 
 def emailAdmins(message_body):
