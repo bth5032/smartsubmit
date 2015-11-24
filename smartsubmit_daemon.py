@@ -13,11 +13,6 @@ admins = [["Bobak Hashemi", "bthashemi@ucsd.edu"]]
 username = "bthashem"
 password = getpass.getpass()
 
-context = zmq.Context()
-port="7584"
-socket=context.socket(zmq.REP)
-socket.bind("tcp://*:%s" % port)
-
 start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
 logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG)
 logging.info("smartsubmit started at %s" % start_time)
@@ -90,9 +85,17 @@ def checkOnJob(jobID):
 	return reply
 
 def run_server():
+
+	#Connect to server
+	context = zmq.Context()
+	port="7584"
+	socket=context.socket(zmq.REP)
+	socket.bind("tcp://*:%s" % port)
+	
+
 	while True:
-		
-		# Get output file
+
+		# Get command
 		
 		command=socket.recv_pyobj()
 		logging.info("recieved command: '%s' from user %s" % (command.command, command.user))
@@ -177,8 +180,8 @@ def run_server():
 					
 					t.start()
 			except Exception as err:
-				print("error parsing command '%s'" % message)
-				socket.send_pyobj("Error parsing command '%s' " % message)
+				print("error parsing command: \nadd directory: %s\nsample name: %s\nuser: %s" % (command.dir, command.sample, command.user))
+				socket.send_pyobj("error parsing command: \nadd directory: %s\nsample name: %s\nuser: %s" % (command.dir, command.sample, command.user) )
 		
 		elif command.command == "run job":
 			ret = {}
