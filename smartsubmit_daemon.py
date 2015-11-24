@@ -92,6 +92,7 @@ def run_server():
 	"""Runs the zeromq server and handles all the jobs"""
 	#Connect to server
 	
+	global JID, job_files
 	context = zmq.Context()
 	port="7584"
 	socket=context.socket(zmq.REP)
