@@ -447,6 +447,7 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=False):
 def checkDisk(dir, machine):
 	"""Attempts to read all files on a disk, returns true if the reads were succesful. If no files on disk, it writes and reads an empty file. Returns output of ssh on failure"""
 	files_on_disk = man.getFilesOnDisk(dir, machine)
+	log = logging.getLogger("diskCheckHelper")
 
 	if files_on_disk:
 		for file_info in files_on_disk:
@@ -457,11 +458,11 @@ def checkDisk(dir, machine):
 			read_bytes = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 			read_bytes.wait()
 
-			logging.info("Reading file '%s' on '%s'" % (path_to_file, machine))
+			log.debug("Reading file '%s' on '%s'" % (path_to_file, machine))
 			
 			output = read_bytes.communicate()[0]
 			if not read_bytes.returncode == 0:
-				logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir,output))
+				log.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir,output))
 
 				return output
 		return True
@@ -471,14 +472,14 @@ def checkDisk(dir, machine):
 		
 		ssh.wait()
 		
-		logging.info("touching file '%stestfile' on '%s'" % (dir, machine))
+		log.debug("touching file '%stestfile' on '%s'" % (dir, machine))
 
 		output = ssh.communicate()[0]
 
 		if ssh.returncode == 0:
 			return True
 		else:
-			logging.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir,output))
+			log.error("The disk '%s:%s' may have gone down. Output of read command: \n-----\n%s" % (machine,dir,output))
 
 			return output
 

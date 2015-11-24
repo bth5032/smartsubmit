@@ -21,6 +21,11 @@ start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
 logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG)
 logging.info("smartsubmit started at %s" % start_time)
 
+log_disk_helper = logging.getLogger("diskCheckHelper")
+log_disk_helper.setLevel(logging.DEBUG)
+log_disk_helper.addHandler(logging.FileHandler("diskCheckHelper_%s.log" % start_time))
+
+
 def emailAdmins(message_body):
 	logging.info("Sending message to admins: \n------\n%s" % message_body)
 	server = smtplib.SMTP('smtp.ucsd.edu', 587)
@@ -59,7 +64,7 @@ def addFile(sample, hdp_path, user):
 		print("There was an error adding the file '%s' into sample '%s'" % (os.path.basename(hdp_path), sample))
 		print(err)
 		logging.error("There was an error adding the file '%s' into sample '%s'" % (os.path.basename(hdp_path), sample))
-		logging.error(err)
+		logging.exception(err)
 	tp.closeThreadFile(threading.currentThread().name)
 
 def addDirectory(sample, hdp_dir, user):
@@ -70,7 +75,7 @@ def addDirectory(sample, hdp_dir, user):
 		print("There was an error adding the directory '%s' to the sample '%s'" % (hdp_dir, sample))
 		print(err)
 		logging.error("There was an error adding the directory '%s'" % hdp_dir)
-		logging.error(err)
+		logging.exception(err)
 	tp.closeThreadFile(threading.currentThread().name)
 
 def checkOnJob(jobID):
