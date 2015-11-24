@@ -13,6 +13,10 @@ admins = [["Bobak Hashemi", "bthashemi@ucsd.edu"]]
 username = "bthashem"
 password = getpass.getpass()
 
+#Set up global job tracking
+JID=0 #Job ID
+job_files = {}
+
 start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
 logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG)
 logging.info("smartsubmit started at %s" % start_time)
@@ -86,10 +90,6 @@ def checkOnJob(jobID):
 
 def run_server():
 	"""Runs the zeromq server and handles all the jobs"""
-	#Set up job tracking
-	JID=0 #Job ID
-	job_files = {}
-
 	#Connect to server
 	
 	context = zmq.Context()
@@ -233,9 +233,6 @@ def checkPass():
 		server.quit()
 		print("Could not connect to mail server, shutting down")
 		return False
-
-
-
 
 password_accepted = checkPass()
 
