@@ -87,10 +87,10 @@ def checkType(hdp_path):
 	
 	out=test.communicate()
 
+	exit_code = test.returncode
+
 	if "No such file or directory" in out[0]:
 		return False
-
-	exit_code = test.returncode
 
 	elif exit_code == 0:
 		return "dir"
