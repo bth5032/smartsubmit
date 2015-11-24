@@ -1,6 +1,6 @@
 import smartsubmit as ss
 import thread_printing as tp
-import zmq, time, threading, logging
+import zmq, time, threading, logging, os
 from ss_com import SmartSubmitCommand
 import getpass
 
@@ -56,7 +56,10 @@ def addFile(sample, hdp_path, user):
 	try:
 		ss.absorbSampleFile(sample, hdp_path, user)
 	except Exception as err:
-		print("There was an error adding the file\n------\n%s" % err)
+		print("There was an error adding the file '%s' into sample '%s'" % (os.path.basename(hdp_path), sample))
+		print(err)
+		logging.error("There was an error adding the file '%s' into sample '%s'" % (os.path.basename(hdp_path), sample))
+		logging.error(err)
 	tp.closeThreadFile(threading.currentThread().name)
 
 def addDirectory(sample, hdp_dir, user):
@@ -64,7 +67,10 @@ def addDirectory(sample, hdp_dir, user):
 	try:
 		ss.absorbDirectory(sample, hdp_dir, user)
 	except Exception as err:
-		print("There was an error adding the file\n------\n%s" % err)
+		print("There was an error adding the directory '%s' to the sample '%s'" % (hdp_dir, sample))
+		print(err)
+		logging.error("There was an error adding the directory '%s'" % hdp_dir)
+		logging.error(err)
 	tp.closeThreadFile(threading.currentThread().name)
 
 def checkOnJob(jobID):
