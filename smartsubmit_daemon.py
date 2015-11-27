@@ -247,12 +247,13 @@ def checkPass():
 		print("Could not connect to mail server, shutting down")
 		return False
 
-password_accepted = checkPass()
+#password_accepted = checkPass()
+password_accepted = True
 
 if password_accepted:
-	disk_check=threading.Thread(name="disk_check", target=diskCheckHelper)
-	disk_check.setDaemon(True)
-	disk_check.start()
+	#disk_check=threading.Thread(name="disk_check", target=diskCheckHelper)
+	#disk_check.setDaemon(True)
+	#disk_check.start()
 
 	run_server()
 
