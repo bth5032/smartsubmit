@@ -53,21 +53,25 @@ def buildCommand(args):
 
 	elif args.run_job:
 		comDict["command"] = "run job"
+		#Check for template
 		if args.template:
 			comDict["path_to_template"] = args.template
 		else:
 			comDict["path_to_template"] = "./condorFileTemplate"
-
+		#Check for executable
 		if args.executable:
 			comDict["path_to_executable"] = args.executable
 			if args.sample:
 				comDict["samples"] = args.sample
 			else:
 				print("You must specify a sample to run over")
-				return ""
+				return ""	
 		else:
 			print("You must specify an executable to run")
 			return ""
+		
+		#Set log directory
+		comDict["log_dir"] = args.log
 	
 	elif args.list_samples:
 		comDict["command"] = "list sample files"
@@ -235,7 +239,7 @@ parser.add_argument("-e", "--executable", help="specify the path to the executab
 parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate", metavar="PATH_TO_TEMPLATE_FILE")
 parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.", action="store_true")
 parser.add_argument("-v","--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
-parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/", metavar="PATH_TO_LOG_FILE")
+parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/", metavar="PATH_TO_LOG_FILE", default="logs/")
 #parser.add_argument("--report_bad_disk", help="Used when a file could not be read by smartsubmit")
 parser.add_argument("-c", "--check_job", help="Check on a job with the given job ID. Only used to check the status of file absorbsion.", metavar="JOB_ID")
 parser.add_argument("--update_file_sample", help="Choose a new name for the sample file specified by -f [hadoop_path]", metavar="NEW_SAMPLE_NAME")
@@ -246,11 +250,8 @@ arguments=parser.parse_args()
 # --------------------------------------------------------------------
 command = buildCommand(arguments)
 
-if arguments.log:
-	log_dir = arguments.log
-else:
-	log_dir = 'logs/'
 
+#Handle Command Feedback
 if command: 
 	reply = sendCommand(command)
 	
@@ -273,7 +274,7 @@ if command:
 			printSampleFiles(reply)
 
 	elif command.command == "run job":
-		if makeDirs(command.samples, log_dir):
+		if makeDirs(command.samples, command.log_dir):
 			for sample in command.samples:
 				if reply[sample] == False:
 					print("There are no files on working disks that are associated with sample '%s'. If you are sure the files are on the disks(use --list_samples), either remove the old files and add them again, or wait for the disk to come back up." % sample)
@@ -284,7 +285,7 @@ if command:
 					processSample(reply[sample], sample)
 					print("\n\n\n")
 		else:
-			print("Could not make log directories, please check that you have write permissions to the working directory specified: %s" % log_dir)
+			print("Could not make log directories, please check that you have write permissions to the working directory specified: %s" % command.log_dir)
 
 	elif command.command == "delete file":
 		print(reply)	

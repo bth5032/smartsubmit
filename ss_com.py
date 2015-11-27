@@ -24,6 +24,7 @@ class SmartSubmitCommand(object):
 			self.exe_path = kwargs["path_to_executable"]
 			self.samples = kwargs["samples"]
 			self.temp_path = kwargs["path_to_template"]
+			self.log_dir = kwargs["log_dir"]
 		elif self.command == "add file":
 			"""Add a file. Expects 
 					1. hdp_path, a string that gives the location of the .root file on the network drive.
