@@ -70,8 +70,8 @@ def buildCommand(args):
 			print("You must specify an executable to run")
 			return ""
 		
-		#Set log directory
-		comDict["log_dir"] = args.log
+		#Set log directory, remove trailing slash if present
+		comDict["log_dir"] = args.log if not args.log[-1:] == "/" else args.log[:-1] 
 	
 	elif args.list_samples:
 		comDict["command"] = "list sample files"
@@ -103,7 +103,7 @@ def buildCommand(args):
 
 	return SmartSubmitCommand(comDict)
 
-def condorSubmit(job_info, sample):
+def condorSubmit(job_info, sample, log_dir):
 	"""Makes a temporary condor submit file using sed to replace tokens in the template file, then calls condor_submit on the processed submit file"""
 	
 	path_to_executable = command.exe_path
@@ -114,7 +114,7 @@ def condorSubmit(job_info, sample):
 	
 	space_seperated_list_of_files = " ".join(list_of_files)
 
-	sed_command = "sed -e 's,\$\$__EXECUTABLE__\$\$,%s,g;s,\$\$__PATH_TO_SAMPLE__\$\$,%s,g;s,\$\$__DISK__\$\$,%s,g;s,\$\$__MACHINE__\$\$,%s,g;s,\$\$__SAMPLE__\$\$,%s,g' < %s > condor_submit.tmp" %(path_to_executable, space_seperated_list_of_files, disk, machine, sample, path_to_template)
+	sed_command = "sed -e 's,\$\$__EXECUTABLE__\$\$,%s,g;s,\$\$__PATH_TO_SAMPLE__\$\$,%s,g;s,\$\$__LOG_DIR__\$\$,%s,g;s,\$\$__DISK__\$\$,%s,g;s,\$\$__MACHINE__\$\$,%s,g;s,\$\$__SAMPLE__\$\$,%s,g' < %s > condor_submit.tmp" %(path_to_executable, space_seperated_list_of_files, log_dir, disk, machine, sample, path_to_template)
 	#print("running sed command %s" % sed_command)
 
 	sed = subprocess.Popen(sed_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -218,9 +218,9 @@ def printSampleFiles(slist, view="Default"):
 
 	print(t)	
 
-def processSample(list_of_jobs, sample):
+def processSample(list_of_jobs, sample, log_dir):
 	for job in list_of_jobs:
-		condorSubmit(job, sample)
+		condorSubmit(job, sample, log_dir)
 # ------------------------------------------------------
 # Start Main 
 # ------------------------------------------------------
@@ -282,7 +282,7 @@ if command:
 					print("---------")
 					print("Sample: %s" % sample)
 					print("---------")
-					processSample(reply[sample], sample)
+					processSample(reply[sample], sample, command.log_dir)
 					print("\n\n\n")
 		else:
 			print("Could not make log directories, please check that you have write permissions to the working directory specified: %s" % command.log_dir)
