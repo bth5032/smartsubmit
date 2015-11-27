@@ -13,8 +13,8 @@ def makeDirs(list_of_samples, parent_dir):
 		if not os.path.isdir(parent_dir):
 			os.mkdir(parent_dir)
 		for sample in list_of_samples:
-			if not os.path.isdir("logs/%s" % sample):
-				os.mkdir("logs/%s" % sample)
+			if not os.path.isdir("%s/%s" % (parent_dir, sample)):
+				os.mkdir("%s/%s" % (parent_dir, sample))
 		return True
 	except Exception as err:
 		print(err)
