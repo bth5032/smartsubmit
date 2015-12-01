@@ -51,7 +51,7 @@ def makeRemoteDir(machine, sample_dir):
 	print("Checking for sample directory on %s:%s" %(machine, sample_dir))
 
 	ls = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-	out=ls.stdout.readline().decode(sys.__stdout__.encoding).rstrip('\n')
+	out=ls.stdout.readline().decode('UTF-8').rstrip('\n')
 
 	if str(out) == sample_dir:
 		print("Sample directory found.")
@@ -102,6 +102,9 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	"""Moves file at 'hadoop_path_to_file' to 'sample_dir' on remote machine 'Machine'. The current iteration of this method works by creating a pipe and forking an ssh call with an hdfs dfs command.
 	Returns: True if file is moved, a string with the error message if there was an error"""
 	
+	print("attempting to move remote file %s " % os.path.basename(hadoop_path_to_file))
+	print("attempting to make remote directory")
+
 	if not makeRemoteDir(machine, sample_dir):
 		message = "There was an error making the remote directory to house the ntuple '%s'. Please try the move again" % os.path.basename(hadoop_path_to_file)
 		print(message)
@@ -120,7 +123,7 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	output = ""
 	lines_iterator = iter(move_command.stdout.readline, b"")
 	for line in lines_iterator:
-		output += line.decode(sys.__stdout__.encoding)+'\n'
+		output += line.decode('UTF-8')+'\n'
 
 	move_command.wait()
 
@@ -267,19 +270,25 @@ def absorbDirectory(dir_path, sample_name, user):
 	"""Calls absorbSampleFile for each root file in directory."""
 	errors = "" #Flag for whether the directory was added succesfully
 
+	print("Checking that %s is a directory" % dir_path)
 	loc_type = checkType(dir_path) #Check if specified path points to a directory
 
 	if loc_type == "dir":
+		print("Verified...")
 
 		if not dir_path[:-1] == '/':
 			dir_path += '/'
 
+		print("Enumerating files for absorption")
 		for filename in listdir(dir_path):
 			if filename[-5:] == ".root":
+				print("found file %s" % filename)
 				hadoop_path_to_file=dir_path+filename
 				status = absorbSampleFile(sample_name, hadoop_path_to_file, user)
 				if not status == True:
 					errors += status+'\n'
+				else:
+					print("succesfully added file, checking for more")
 
 		if status:
 			print("Directory succesfully added")
