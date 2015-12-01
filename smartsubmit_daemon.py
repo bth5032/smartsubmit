@@ -11,7 +11,7 @@ import email.utils as eutils
 
 admins = [["Bobak Hashemi", "bthashemi@ucsd.edu"]]
 username = "bthashem"
-password = getpass.getpass()
+#password = getpass.getpass()
 
 #Set up global job tracking
 JID=0 #Job ID
