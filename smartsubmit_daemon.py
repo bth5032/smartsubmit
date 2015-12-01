@@ -254,8 +254,10 @@ if password_accepted:
 	#disk_check=threading.Thread(name="disk_check", target=diskCheckHelper)
 	#disk_check.setDaemon(True)
 	#disk_check.start()
-
-	run_server()
-
+	try:
+		run_server()
+	except Exception as err:
+		logging.exception(err)
+		exit(1)
 else:
 	exit(1)
