@@ -150,7 +150,7 @@ def sendCommand(command_obj):
 	
 	# Send command to the server
 	# -----------------------------------------------------------------------
-	socket.send_pyobj(command_obj)
+	socket.send_pyobj(command_obj, protocol=2)
 
 	return socket.recv_pyobj()
 
