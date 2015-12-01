@@ -103,7 +103,7 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 	Returns: True if file is moved, a string with the error message if there was an error"""
 	
 	print("attempting to move remote file %s " % os.path.basename(hadoop_path_to_file))
-	print("attempting to make remote directory")
+	print("attempting to make remote directory...")
 
 	if not makeRemoteDir(machine, sample_dir):
 		message = "There was an error making the remote directory to house the ntuple '%s'. Please try the move again" % os.path.basename(hadoop_path_to_file)
@@ -114,9 +114,10 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 		path_in_hadoop = hadoop_path_to_file[7:]
 
 	filename = os.path.basename(hadoop_path_to_file)
-
+	print("constructing ssh call...")
 	ssh_syntax = "ssh %s \"rm %s%s 2>/dev/null; hdfs dfs -copyToLocal %s %s \"" % (machine, sample_dir, filename, path_in_hadoop, sample_dir)
 
+	print("running move command...")
 	move_command = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
 	# --------Debug move command----------
@@ -134,7 +135,7 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 		return True	
 	else:
 		if count < 3:
-			print("There was an error moving the file %s, will try again" % hadoop_path_to_file)
+			print("There was an error moving the file %s, will try again. Move command had output %s" % (hadoop_path_to_file, output))
 			return moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count+1)
 		else:
 			message = "There was an error moving the file %s. This was the final attempt, please try to add the file again later. Recieved Error:\n------\n%s" % (os.path.basename(hadoop_path_to_file), output)
@@ -174,6 +175,8 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	Mainly for testing purposes, you may specify the location where the file should land by setting Machine and LocalDirectory.
 	Returns: True if the file was absorbed succesfully, a string with the error message on error."""
 
+	print("attempting to absorb sample file %s" % os.path.basename(hadoop_path_to_file))
+
 	if hadoop_path_to_file in active_files:
 		message = "The file %s is in the process of being added in another thread" % os.path.basename(hadoop_path_to_file)
 		print(message)
@@ -193,7 +196,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		print(message)
 		active_files.remove(hadoop_path_to_file)
 		return message
-
+	print("Checking that file exists and is not a directory...")
 	#Check that the file exists:
 	exists = checkType(hadoop_path_to_file)
 	if exists == "dir":
@@ -209,7 +212,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
  
 	#Check if the record is already in the table. 
 	#Having the same sample file twice will cause issues when we try to run the analysis on every file in a sample. 
-
+	print("Checking if the file is already in the table...")
 	ret_code = sampleInTable(hadoop_path_to_file, sample_name)
 	if not isinstance(ret_code, int):
 		message = "This sample file %s is already in the database, but under the sample name %s. The file will not be added unless the old file is removed." % (filename, ret_code)
@@ -222,6 +225,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		active_files.remove(hadoop_path_to_file)
 		return message
 
+	print("Getting best disk to store the file...")
 	locationData = getBestDisk(sample_name) 
 	
 	if Machine == None:
@@ -230,7 +234,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		LocalDirectory = locationData["LocalDirectory"]
 	
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
-
+	print("calling remote file move...")
 	status = moveRemoteFile(Machine, sample_dir, hadoop_path_to_file)
 
 	if status == True:
