@@ -270,7 +270,7 @@ def listdir(path):
 
 	return out[0].split('\n')[1:-1]
 
-def absorbDirectory(dir_path, sample_name, user):
+def absorbDirectory(sample_name, dir_path, user):
 	"""Calls absorbSampleFile for each root file in directory."""
 	errors = "" #Flag for whether the directory was added succesfully
 
