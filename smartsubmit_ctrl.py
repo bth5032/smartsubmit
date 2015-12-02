@@ -93,9 +93,9 @@ def buildCommand(args):
 			print("You must specify the hadoop path to the file whose sample name you want changed with -f")
 			return ""
 
-	elif args.report_bad_disk:
-		print("This functionality is stil in development")
-		return ""
+	#elif args.report_bad_disk:
+	#	print("This functionality is stil in development")
+	#	return ""
 	else:
 		return ""
 
