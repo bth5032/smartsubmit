@@ -68,13 +68,12 @@ class sqlman(object):
 			self.cursor.execute("""CREATE TABLE SampleFiles (
 								    Sample_ID      INTEGER       PRIMARY KEY AUTOINCREMENT,
 								    Sample         VARCHAR (200) NOT NULL,
-								    LocalDirectory VARCHAR (500 NOT NULL,
+								    LocalDirectory VARCHAR (500) NOT NULL,
 								    FileName       VARCHAR (100) NOT NULL,
 								    HadoopPath     VARCHAR (500) NOT NULL,
-								    CondorID       VARCHAR (50) NOT NULL,
 								    Machine        VARCHAR (100) NOT NULL,
 								    User           VARCHAR (100) NOT NULL,
-									    Disk_ID        INTEGER NOT NULL,
+									Disk_ID        INTEGER NOT NULL,
 								    FOREIGN KEY (
 								        Disk_ID
 								    )
@@ -164,7 +163,7 @@ class sqlman(object):
 			return message
 
 	def addSampleFile(self, sample, filename, localPath, hadoopDirectory, machine, user):
-		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the folder containing the file on the IOSlot slave, hadoopDirectory is the location of the file in Hadoop, machine is the domain name of the slave, and condorID is the condor identifier for the slot associated with the disk."""
+		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the folder containing the file on the IOSlot slave, hadoopDirectory is the location of the file in Hadoop, and machine is the domain name of the slave."""
 		
 		if not localPath[-1:] == '/': #add trailing / to path if needed
 			localPath+='/'
@@ -199,7 +198,7 @@ class sqlman(object):
 			print(message)
 			return message
 
-	def addDisk(self, path, machine, condorID, working=1):
+	def addDisk(self, path, machine, working=1):
 		"""Adds disk to the Disks table"""
 		
 		if not path[-1:] == '/': #add trailing / to path if needed
@@ -211,7 +210,7 @@ class sqlman(object):
 			return None
 
 		try:
-			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, CondorID, Working) VALUES('%s', '%s', '%s', '%i') " % (path, machine, condorID, working) )
+			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, Working) VALUES('%s', '%s', '%i') " % (path, machine, working) )
 			self.connection.commit()
 		except sqlite3.OperationalError as err:
 			print("There was an error adding the row: %s" % err)

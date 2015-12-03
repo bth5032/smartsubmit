@@ -109,6 +109,10 @@ def condorSubmit(job_info, sample, log_dir):
 	path_to_executable = command.exe_path
 	disk=job_info[1].split('/')[1]
 	path_to_template = command.temp_path
+	if not os.path.isfile(path_to_template):
+		print("The template file specified '%s' does not exist." % path_to_template)
+		return False
+
 	machine = job_info[0]
 	list_of_files = job_info[2]
 	
@@ -124,7 +128,7 @@ def condorSubmit(job_info, sample, log_dir):
 	exit_code = sed.returncode
 
 	if not exit_code == 0: #Break if sed error
-		print("There was an error creating the submit file from the template. sed quit with error code %s. Will not attempt to submit job for %s" % (str(exit_code), space_seperated_list_of_files))
+		print("There was an error creating the submit file from the template? sed quit with error code %s. Will not attempt to submit job for %s" % (str(exit_code), space_seperated_list_of_files))
 		return exit_code
 
 	condor_submit_command = "condor_submit condor_submit.tmp"
