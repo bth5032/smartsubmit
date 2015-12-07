@@ -188,7 +188,7 @@ def printSampleFiles(slist, view="Default"):
 	elif view=="More":
 		title=["Sample Name", "Local Directory", "Filename", "Machine", "Owner"]
 		t=PrettyTable(title)
-		stripped_list = [[x[1], x[2], x[3], x[5], x[8]] for x in slist]
+		stripped_list = [[x[1], x[2], x[3], x[6], x[8]] for x in slist]
 		sorted_list = sorted(stripped_list, key=lambda x: x[0])
 		last_sample = sorted_list[0][0]
 		for x in sorted_list:
@@ -200,7 +200,7 @@ def printSampleFiles(slist, view="Default"):
 	elif view=="Even More":
 		title=["Sample Name", "Local Directory", "Filename", "Hadoop Directory", "Machine", "Owner"]
 		t=PrettyTable(title)
-		stripped_list = [[x[1], x[2], x[3], x[4], x[5], x[8]] for x in slist]
+		stripped_list = [[x[1], x[2], x[3], x[4], x[6], x[8]] for x in slist]
 		sorted_list = sorted(stripped_list, key=lambda x: x[0])
 		last_sample = sorted_list[0][0]
 		for x in sorted_list:
