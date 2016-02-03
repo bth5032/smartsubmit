@@ -13,6 +13,7 @@ do
 		location=`echo $f | cut -d ":" -f2`
 		#hdloc=`echo $f | cut -d ":" -f3`
 		echo "ssh $machine wc -l $location"
+	done
 done
 
 popd
