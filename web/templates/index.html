@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block jumbo %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+  <div class="container">
+    <h1>Smartsubmit</h1>
+    <p>Welcome to the web interface for the Smartsubmit submission handler. Here you can view usage statistics, check the list of sample files, and get uptime/downtime reports.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <!-- Example row of columns -->
+  <div class="row">
+    <div class="col-lg-12">
+      <h2>Sample Files</h2>
+      <p>Here's a quick breakdown of the sample files online:</p>
+      <table class="table-striped" style="width: 100%">
+        <tr>
+          <td style="width: 40%"><strong>Name</strong></td>
+          <td style="width: 30%"><strong>Number of Files</strong></td>
+          <td style="width: 30%"><strong>Owner</strong></td>
+        </tr>
+      <p>{% for s in sample_list %}
+          <tr>
+            <td style="width: 40%">{{ s.name }}</td>
+            <td style="width: 30%">{{ s.count }}</td>
+            <td style="width: 30%">{{ s.owner }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <br />
+      <p><a class="btn btn-primary" href="/files" role="button">View details &raquo;</a></p>
+  </div>
+</div>
+  <div class="row">
+    <div class="col-sm-6">
+      <h2>Quick History</h2>
+      <p>Here we list the 3 latest calls to smartsubmit</p>
+      <table class="table-striped" style="width: 100%">
+      <p>{% for l in log_list %}
+          <tr>
+            <td>{{ l }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <br />
+      <p><a class="btn btn-primary" href="/history" role="button">View details &raquo;</a></p>
+    </div>
+    <div class="col-sm-6">
+      <h2>Uptime</h2>
+      <p>Here we'll list the uptime statistics and errors for the server.</p>
+    </div>
+  </div>
+{% endblock %}

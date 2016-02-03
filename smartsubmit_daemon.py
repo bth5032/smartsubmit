@@ -9,16 +9,13 @@ import smtplib
 import email.mime.text as mt
 import email.utils as eutils
 
-admins = [["Bobak Hashemi", "bthashemi@ucsd.edu"]]
-username = "bthashem"
-#password = getpass.getpass()
 
 #Set up global job tracking
 JID=0 #Job ID
 job_files = {}
 
 start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
-logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG)
+logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG, format='%(asctime)s | %(message)s', datefmt='%m-%d %H:%M')
 logging.info("smartsubmit started at %s" % start_time)
 
 log_disk_helper = logging.getLogger("diskCheckHelper")
@@ -115,7 +112,7 @@ def run_server():
 		# Get command
 		
 		command=socket.recv_pyobj()
-		logging.info("recieved command: '%s' from user %s" % (command.command, command.user))
+		logging.info("recieved command: %s from user %s" % (command.command, command.user))
 
 		#threadname=time.strftime("ss_output_for_job_at_%m-%d-%Y_%H:%M:%S")
 
@@ -247,17 +244,9 @@ def checkPass():
 		print("Could not connect to mail server, shutting down")
 		return False
 
-#password_accepted = checkPass()
-password_accepted = True
 
-if password_accepted:
-	#disk_check=threading.Thread(name="disk_check", target=diskCheckHelper)
-	#disk_check.setDaemon(True)
-	#disk_check.start()
-	try:
-		run_server()
-	except Exception as err:
-		logging.exception(err)
-		exit(1)
-else:
+try:
+	run_server()
+except Exception as err:
+	logging.exception(err)
 	exit(1)

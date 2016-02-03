@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+tr.show_more {
+    cursor: pointer;
+}
+
+#more_info{
+  display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- Example row of columns -->
+  <br />
+  <h2> Smartsubmit Files </h2>
+  <p> Below we have a list of every file in the smartsubmit system. Click on a sample name to get the list of the files in that sample.</p>
+  <div class="row">
+  <div class="col-lg-12">
+    <table class="table-striped" style="width: 100%">
+        <tr>
+          <td style="width: 40%"><strong>Name</strong></td>
+          <td style="width: 30%"><strong>Number of Files</strong></td>
+          <td style="width: 30%"><strong>Owner</strong></td>
+        </tr>
+      {% for s in sample_list %}
+          <tr class="show_more" id="tr_{{ s.name }}">
+            <td style="width: 40%">{{ s.name }}</td>
+            <td style="width: 30%">{{ s.count }}</td>
+            <td style="width: 30%">{{ s.owner }}</td>
+          </tr>
+        {% endfor %}
+    </table>
+  </div>
+  </div>
+    <br>
+    <h3> Detailed Info </h3>
+    <p> Click above to show the files for a particular sample </p>
+    <hr>
+</div>
+<div class="container-fluid">
+  <div class="row">
+  <div class="col-lg-12">
+    <table class="table-striped" id="more_info" style="width: 100%; cellpadding: 20px">
+        <tr>
+          <td style="width: 10%"><strong>File Name</strong></td>
+          <td style="width: 10%"><strong>Owner</strong></td>
+          <td style="width: 40%"><strong>Local Directory</strong></td>
+          <td style="width: 40%"><strong>Hadoop Directory</strong></td>
+        </tr>
+      <table>
+  </div>
+  </div>
+</div>
+
+  <script type="text/javascript">
+    
+  function addRow(fname, ldir, hdir, owner){
+    $('#more_info tr:last').after("<tr class='fileinfo'>\
+      <td style='width: 10%'>"+ fname +"</td>\
+      <td style='width: 10%'>"+ owner +"</td>\
+      <td style='width: 40%'>"+ ldir +"</td>\
+      <td style='width: 40%'>"+ hdir +"</td>\
+      </tr>");
+  }
+
+
+  function fillDetails(rows) {
+    for (var i in rows) {
+      var fname = rows[i][0];
+      var ldir = rows[i][3]+":"+rows[i][1]; //Machine:Local Directory
+      var hdir = rows[i][2]; //Hadoop Directory
+      var owner = rows[i][4];
+
+      addRow(fname, ldir, hdir, owner);
+    }
+  }
+
+  function cleanTable(){
+    $("#more_info:not(:first)").remove()
+  }
+
+  $(".show_more").click(function(){
+    var sample_name = $(this).attr("id").substring(3);
+
+    $("#more_info tr:not(:first)").remove()
+
+    $.getJSON("/get_sample_files/"+sample_name+".json", function(data) {
+      fillDetails(data);
+    });
+    $("#more_info").show()
+  })
+  </script>
+<div class="container">
+{% endblock %}
