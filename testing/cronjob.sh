@@ -12,7 +12,8 @@ do
 		machine=`echo $f | cut -d ":" -f1`
 		location=`echo $f | cut -d ":" -f2`
 		#hdloc=`echo $f | cut -d ":" -f3`
-		echo "ssh $machine wc -l $location"
+		ret=`ssh $machine "wc -l $location"`
+		echo $ret
 	done
 done
 
