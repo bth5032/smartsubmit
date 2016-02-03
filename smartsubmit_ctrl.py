@@ -220,6 +220,11 @@ def printSampleFiles(slist, view="Default"):
 				last_sample = x[1]
 			t.add_row(x)
 
+	elif view=="Machine":
+		"""Just prints the list out to be parsed by an external program"""
+		title=["File ID", "Sample Name", "Local Directory", "Filename", "Hadoop Directory", "Condor ID", "Machine", "Disk ID", "Owner"]
+		t= sorted(slist, key=lambda x: x[1])
+
 	print(t)	
 
 def processSample(list_of_jobs, sample, log_dir):
@@ -271,6 +276,8 @@ if command:
 				printSampleFiles(reply, "Even More")
 			elif arguments.view == "4":
 				printSampleFiles(reply, "All")
+			elif arguments.view == "5":
+				printSampleFiles(reply, "Machine")
 			else:
 				print("unrecognized view code %s, please select from 0,1,2,3,4. Showing default view:" % arguments.view)
 				printSampleFiles(reply)
