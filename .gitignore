@@ -59,6 +59,8 @@ target/
 # Backup SQLite Databases
 *.db.bak
 *.db-journal
+*.db
+
 
 # Manually Ignore Files
 *.ignore
