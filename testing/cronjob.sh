@@ -2,7 +2,7 @@
 
 pushd /root/ss_testing/
 
-out=`timeout 15 ss_ctrl --list_samples -v5`
+out=`timeout 15 /root/smartsubmit/smartsubmit_ctrl.py --list_samples -v5`
 
 if [[ "$?" -eq "0" ]]
 then
