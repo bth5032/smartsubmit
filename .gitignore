@@ -61,10 +61,15 @@ target/
 *.db-journal
 *.db
 
-
 # Manually Ignore Files
 *.ignore
 
 #condor stuff
 logs
 condor_submit.tmp
+
+#Output files
+nohup.out
+*.output
+err.out
+
