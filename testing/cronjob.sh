@@ -4,7 +4,13 @@ pushd /root/ss_testing/
 
 out=`timeout 15 /root/smartsubmit/smartsubmit_ctrl.py --list_samples -v5`
 
-if [[ "$?" -eq "0" ]]
+pwd
+date
+
+Message=""
+Errors="false"
+
+if [[ "$?" -eq 0 ]]
 then
 	#We have recieved the list of files from smartsubmit
 	for line in `echo $out | sed -e "s/\[//g" -e "s/',//g" -e "s/u'//g" -e "s/'//g" -e "s/,//g" | tr ']' '\n' | sed -e "s/^ //g" -e "s/ /|/g"` 
@@ -17,29 +23,45 @@ then
 			machine=`echo $f | cut -d ":" -f1`
 			location=`echo $f | cut -d ":" -f2`
 			hdloc=`echo $f | cut -d ":" -f3`
-			#hdloc=`echo $f | cut -d ":" -f3`
-			ret=`ssh $machine "wc -l $location"`
+			echo "$machine:$location"
+			ssh_output=`ssh $machine "wc -l $location"`
+			ret=`echo "$ssh_output" | cut -d ' ' -f1`
 			lastcount=`sqlite3 filetest.db "SELECT WordCount FROM FileInfo WHERE HadoopPath='$hdloc'"`
-			if [[ "$lastcount" -eq "$ret" ]]
+			if [[ "$?" -eq 1 ]]
 			then
+				Errors="true"
+				#The file did not exist....
+				Message+="FILE ERROR: The file at $machine:$location was not readable by wc. \n HadoopPath: $hdloc \n======================"
+			elif [[ "$lastcount" == "$ret" ]]
+			then
+				echo "Counts Equal"
 				sqlite3 filetest.db "UPDATE FileInfo SET LastCheckDate='$date' WHERE HadoopPath='$hdloc'"
 			elif [[ -z "$lastcount" ]]
-				sqlite3 filetest.db "INSERT HadoopPath, WordCount, LastCheckDate INTO FileInfo Values('$hdloc','$ret','$date')"
+			then
+				echo "No last count, inserting"
+				sqlite3 filetest.db "INSERT INTO FileInfo(HadoopPath, WordCount, LastCheckDate) Values('$hdloc','$ret','$date')"
 			else
-				LastCheckDate=`sqlite3 filetest.db "SELECT LastCheckDate FROM FileInfo WHERE HadoopPath=$hdloc"`
-				echo "Issue with file at hadoop location $hloc\
-\
-------- Date -- Wordcount\
-TODAY : $date -- $ret \
-OLD   : $LastCheckDate $lastcount." | mailx -s "file error" "bthashemi@ucsd.edu"
+				Errors="true"
+				echo "Counts don't agree"
+				LastCheckDate=`sqlite3 filetest.db "SELECT LastCheckDate FROM FileInfo WHERE HadoopPath='$hdloc'"`
+				echo "Last count $LastCountDate -- $lastcount"
+				echo "This count $ret"
+				Message+="COUNT ERROR: Issue with file at hadoop location $hloc \n  TODAY : $ret ==||== $LastCheckDate:  $lastcount.\n======================"
 			fi
 		done
 	done
 else
 	#There was an error, we never got a list of files from the server
+	Errors="true"
 	date=`date "+%F_%H:%M:%S"`
-	echo "Timeout server response at $date, please restart the server manually." | mailx -s "Possible issue with Smartsubmit server" "bthashemi@ucsd.edu"
-	#nohup python /root/smartsubmit/smartsubmit_daemon.py & > "stdout_$date.output"
+	Message+="TIMEOUT ERROR: Timeout server response at $date, please restart the server manually.\n======================"
+fi
+
+echo "================================================="
+
+if [[ "$Errors" == "true" ]]
+then
+	echo -e "$Message" | mailx -s "Errors" "bthashemi@ucsd.edu"
 fi
 
 popd
