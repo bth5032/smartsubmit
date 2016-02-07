@@ -18,7 +18,6 @@ def checkAlive():
 	exit_code = ps.returncode
 	for out in iter(ps.stdout.readline, ''):
 		out = out.decode('UTF-8').rstrip('\n')	
-		print(str(out))
 		if "smartsubmit_daemon.py" in str(out):
 			return True
 	
