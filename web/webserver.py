@@ -15,15 +15,12 @@ app=Flask(__name__)
 
 def checkAlive():
 	ps = subprocess.Popen("ps aux", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-	out= ps.stdout.readline().decode('UTF-8').rstrip('\n')
 	exit_code = ps.returncode
-
-	print(str(out))
-
-	if "smartsubmit_daemon.py" in str(out):
-		return True
-	else:
-		return False
+	with str(ps.stdout.readline().decode('UTF-8').rstrip('\n')) as out
+		if "smartsubmit_daemon.py" in out:
+			return True
+	
+	return False
 
 @app.route("/")
 def showIndex():
