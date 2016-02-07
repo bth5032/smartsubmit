@@ -16,7 +16,7 @@ app=Flask(__name__)
 def checkAlive():
 	ps = subprocess.Popen("ps aux", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	exit_code = ps.returncode
-	with str(ps.stdout.readline().decode('UTF-8').rstrip('\n')) as out
+	with str(ps.stdout.readline().decode('UTF-8').rstrip('\n')) as out:
 		if "smartsubmit_daemon.py" in out:
 			return True
 	
