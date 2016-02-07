@@ -54,7 +54,7 @@ def frontpageSamples():
 def rawLogs(count=3):
 	"""Reads latest log files and pulls 'count' commands in"""
 	path="../"
-	fls = os.listdir(path)) #file list
+	fls = os.listdir(path) #file list
 	lls = [] #log list
 	for f in fls:
 		if ("smartsubmit_" in f) and (".log" in f):
