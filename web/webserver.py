@@ -113,14 +113,13 @@ def renderHowTo():
 @app.route("/history")
 def renderHistory():
 	log_list=renderedLogs(20)
-	alive=checkAlive()
-	return render_template("history.html", log_list=log_list, alive=alive)
+	return render_template("history.html", log_list=log_list)
 
 @app.route("/uptime")
 def renderUptime():
 	up_list=getUptime(20)
-
-	return render_template("uptime.html", up_list=up_list)
+	alive=checkAlive()
+	return render_template("uptime.html", up_list=up_list, alive=alive)
 
 if __name__ == "__main__":
     app.run(debug=True)
