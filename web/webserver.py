@@ -24,9 +24,10 @@ def showIndex():
 		sample_list.append(sample_dict[k])
 
 	#Get Log Info
-	log_list=frontpageLog()
+	log_list=rawLogs()
+	up_list=getUptime()
 
-	return render_template("index.html", sample_list=sample_list, log_list=log_list)
+	return render_template("index.html", sample_list=sample_list, log_list=log_list, up_list=up_list)
 
 def frontpageSamples():
 	"""Takes in the list of the sample files table from the server and pretty prints it to the screen."""
@@ -41,8 +42,8 @@ def frontpageSamples():
 
 	return samples
 
-def frontpageLog(count=3):
-	"""Reads latest log files and pulls 10 commands in"""
+def rawLogs(count=3):
+	"""Reads latest log files and pulls 'count' commands in"""
 	fls = os.listdir("../") #file list
 	lls = [] #log list
 	for f in fls:
@@ -64,9 +65,21 @@ def frontpageLog(count=3):
 
 	return output
 
+def renderedLogs(count=20):
+	log_list=rawLogs(count)
+	return [ [log_list[i][0:5], log_list[i][6:]] for i in xrange(0,len(log_list)) ]
 
-def frontpageHistory():
-	pass
+def getUptime(count=3):
+	#f=open("/root/ss_testing/weblog")
+	f=open("weblog")
+	lines=[]
+	for l in f:
+		lines.append([ l[:l.rfind(":")] , l[l.rfind(":")+1:]])
+		count-=1
+		if count == 0:
+			return lines
+
+	return lines
 
 @app.route("/files")
 def renderFiles():
@@ -82,18 +95,18 @@ def returnSampleFiles(sname):
 	rows = man.x("Select FileName, LocalDirectory, HadoopPath, Machine, User From SampleFiles Where Sample=='%s'" % sname)
 	return Response(json_dump(rows), mimetype='application/json')
 
-
 @app.route("/howto")
 def renderHowTo():
 	return render_template("howto.html")
 
 @app.route("/history")
 def renderHistory():
-	return render_template("howto.html")
+	log_list=renderedLogs(20)
+	return render_template("history.html", log_list=log_list)
 
 @app.route("/uptime")
 def renderUptime():
-	return render_template("howto.html")
+	return render_template("uptime.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

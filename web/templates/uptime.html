@@ -51,18 +51,6 @@
     <div class="col-sm-6">
       <h2>Uptime</h2>
       <p>Here we'll list the uptime statistics and errors for the server.</p>
-      <table class="table-striped" style="width: 100%">
-         <tr>
-          <td style="width: 30%"><strong>Date</strong></td>
-          <td style="width: 70%"><strong>Status</strong></td>
-        </tr>
-      {% for l in log_list %}
-        <tr>
-          <td style="width: 30%">{{ l[0] }}</td>
-          <td style="width: 70%">{{ l[1] }}</td>
-        </tr>
-      {% endfor %}
-    </table>
     </div>
   </div>
 {% endblock %}
