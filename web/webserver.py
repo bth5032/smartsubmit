@@ -1,7 +1,7 @@
 from flask import *
 from json import dumps as json_dump
 
-import sys, os, subprocess
+import sys, os, subprocess, parse
 sys.path.append("../")
 import sqlman, sqlite3
 
@@ -53,14 +53,14 @@ def frontpageSamples():
 
 def rawLogs(count=3):
 	"""Reads latest log files and pulls 'count' commands in"""
-	fls = os.listdir("../") #file list
+	path="../"
+	fls = os.listdir(path)) #file list
 	lls = [] #log list
 	for f in fls:
 		if ("smartsubmit_" in f) and (".log" in f):
 			lls.append(f)
 
-	lls.sort(reverse=True)
-
+	lls.sort(key=lambda f: os.path.getmtime(os.path.join(path, f)), reverse=True)
 	output=[]
 
 	for fname in lls:
