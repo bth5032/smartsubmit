@@ -76,7 +76,7 @@ def rawLogs(count=3):
 
 def renderedLogs(count=20):
 	log_list=rawLogs(count)
-	return [ [log_list[i][0:17], log_list[i][36:]] for i in range(0,len(log_list)) ]
+	return [ [log_list[i][0:19], log_list[i][40:]] for i in range(0,len(log_list)) ]
 
 def getUptime(count=3):
 	#f=open("/root/ss_testing/weblog")
