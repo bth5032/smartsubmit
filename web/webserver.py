@@ -1,7 +1,7 @@
 from flask import *
 from json import dumps as json_dump
 
-import sys, os
+import sys, os, subprocess
 sys.path.append("../")
 import sqlman, sqlite3
 
@@ -13,6 +13,15 @@ man = sqlman.sqlman(connection, database_file, working_dir)
 
 app=Flask(__name__)
 
+def checkAlive():
+	ps = subprocess.Popen("ps aux", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+	out= ps.stdout.readline().decode('UTF-8').rstrip('\n')
+	exit_code = ps.returncode
+
+	if "smartsubmit_daemon.py" in str(out):
+		return True
+	else:
+		return False
 
 @app.route("/")
 def showIndex():
@@ -24,7 +33,7 @@ def showIndex():
 		sample_list.append(sample_dict[k])
 
 	#Get Log Info
-	log_list=rawLogs()
+	log_list=renderedLogs(3)
 	up_list=getUptime()
 
 	return render_template("index.html", sample_list=sample_list, log_list=log_list, up_list=up_list)
@@ -67,17 +76,17 @@ def rawLogs(count=3):
 
 def renderedLogs(count=20):
 	log_list=rawLogs(count)
-	return [ [log_list[i][0:5], log_list[i][6:]] for i in xrange(0,len(log_list)) ]
+	return [ [log_list[i][0:5], log_list[i][6:]] for i in range(0,len(log_list)) ]
 
 def getUptime(count=3):
 	#f=open("/root/ss_testing/weblog")
-	f=open("weblog")
 	lines=[]
-	for l in f:
-		lines.append([ l[:l.rfind(":")] , l[l.rfind(":")+1:]])
-		count-=1
-		if count == 0:
-			return lines
+	with open("/root/ss_testing/weblog") as f:
+		for l in f:
+			lines.append([ l[:l.rfind(":")] , l[l.rfind(":")+1:-1]])
+			count-=1
+			if count == 0:
+				return lines
 
 	return lines
 
@@ -106,7 +115,9 @@ def renderHistory():
 
 @app.route("/uptime")
 def renderUptime():
-	return render_template("uptime.html")
+	up_list=getUptime(20)
+
+	return render_template("uptime.html", up_list=up_list)
 
 if __name__ == "__main__":
     app.run(debug=True)

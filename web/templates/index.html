@@ -39,9 +39,14 @@
       <h2>Quick History</h2>
       <p>Here we list the 3 latest calls to smartsubmit</p>
       <table class="table-striped" style="width: 100%">
+        <tr>
+          <td style="width: 30%"><strong>Date</strong></td>
+          <td style="width: 70%"><strong>Command</strong></td>
+        </tr>
       <p>{% for l in log_list %}
           <tr>
-            <td>{{ l }}</td>
+            <td style="width: 30%">{{ l[0] }}</td>
+            <td style="width: 70%">{{ l[1] }}</td>
           </tr>
         {% endfor %}
       </table>
@@ -53,16 +58,18 @@
       <p>Here we'll list the uptime statistics and errors for the server.</p>
       <table class="table-striped" style="width: 100%">
          <tr>
-          <td style="width: 30%"><strong>Date</strong></td>
-          <td style="width: 70%"><strong>Status</strong></td>
+          <td style="width: 50%"><strong>Date</strong></td>
+          <td style="width: 50%"><strong>Status</strong></td>
         </tr>
-      {% for l in log_list %}
+      {% for u in up_list %}
         <tr>
-          <td style="width: 30%">{{ l[0] }}</td>
-          <td style="width: 70%">{{ l[1] }}</td>
+          <td style="width: 50%">{{ u[0] }}</td>
+          <td style="width: 50%">{{ u[1] }}</td>
         </tr>
       {% endfor %}
     </table>
+    <br />
+    <p><a class="btn btn-primary" href="/uptime" role="button">View details &raquo;</a></p>
     </div>
   </div>
 {% endblock %}
