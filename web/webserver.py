@@ -17,7 +17,7 @@ def checkAlive():
 	ps = subprocess.Popen("ps aux", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	exit_code = ps.returncode
 	out = ps.stdout.readline().decode('UTF-8').rstrip('\n')
-	while out
+	while out:
 		if "smartsubmit_daemon.py" in str(out):
 			return True
 		out = ps.stdout.readline().decode('UTF-8').rstrip('\n')
