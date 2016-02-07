@@ -82,12 +82,11 @@ def renderedLogs(count=20):
 def getUptime(count=3):
 	#f=open("/root/ss_testing/weblog")
 	lines=[]
-	with open("/root/ss_testing/weblog") as f:
-		for l in f:
-			lines.append([ l[:l.rfind(":")] , l[l.rfind(":")+1:-1]])
-			count-=1
-			if count == 0:
-				return lines
+	for l in reversed(open("/root/ss_testing/weblog").readlines()):
+		lines.append([ l[:l.rfind(":")] , l[l.rfind(":")+1:-1]])
+		count-=1
+		if count == 0:
+			return lines
 
 	return lines
 
