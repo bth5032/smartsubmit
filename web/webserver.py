@@ -65,8 +65,7 @@ def rawLogs(count=3):
 	output=[]
 
 	for fname in lls:
-		f=open("../"+fname)
-		for line in f:
+		for line in reversed(open("../"+fname).readlines()):
 			if "recieved command:" in line:
 				output.append(line)
 				count-=1
