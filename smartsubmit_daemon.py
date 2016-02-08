@@ -133,6 +133,12 @@ def run_server():
 				outfile=open(outfile_name, "w+")
 				job_files[JID] = outfile
 
+				if (not command.user == "bhashemi"):
+					#Only bhashemi can add files for now.
+					logging.error("User %s tried to add a file, but only 'bhashemi' can add files." % command.user)
+					socket.send_pyobj("Only user 'bhashemi' can add files.")
+					continue
+
 				print("absorbing sample file '%s' under sample name '%s' for user'%s'" % (command.hdp_path, command.sample, command.user))
 
 				if ' ' in command.sample:
@@ -156,6 +162,13 @@ def run_server():
 		elif command.command == "delete file":
 			try:
 				hadoop_path_to_file = command.hdp_path
+
+				if (not command.user == "bhashemi"):
+					#Only bhashemi can add files for now.
+					logging.error("User %s tried to delete a file, but only 'bhashemi' can delete files." % command.user)
+					socket.send_pyobj("Only user 'bhashemi' can delete files.")
+					continue
+
 				print("deleting sample file '%s'" % hadoop_path_to_file)
 				message = ss.deleteSampleFile(hadoop_path_to_file, command.user)
 				print(message)
@@ -169,6 +182,13 @@ def run_server():
 		elif command.command == "add directory":
 			
 			try:
+
+				if (not command.user == "bhashemi"):
+					#Only bhashemi can add files for now.
+					logging.error("User %s tried to add a directory, but only 'bhashemi' can add directories." % command.user)
+					socket.send_pyobj("Only user 'bhashemi' can add directories.")
+					continue
+
 				threadname=time.strftime("ss_%s" % JID +"_%m-%d-%Y_%H:%M:%S")
 					
 				working_dir="/tmp/"
@@ -213,6 +233,12 @@ def run_server():
 
 		elif command.command == "update file sample":
 			try:
+				if (not command.user == "bhashemi"):
+					#Only bhashemi can add files for now.
+					logging.error("User %s tried to change sample names, but only 'bhashemi' can manage samples." % command.user)
+					socket.send_pyobj("Only user 'bhashemi' can manage samples.")
+					continue
+
 				output = ss.updateSampleName(command.hdp_path, command.new_name)
 				socket.send_pyobj(output)
 			except Exception as err:
