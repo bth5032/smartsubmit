@@ -197,7 +197,7 @@ def run_server():
 				outfile=open(outfile_name, "w+")
 				job_files[JID] = outfile
 
-				print("absorbing directory '%s' under sample name '%s' for user'%s'" % (command.dir, command.sample, command.user))
+				print("absorbing directory '%s' under sample name '%s' for user'%s' with Job ID: %i" % (command.dir, command.sample, command.user, JID))
 				logging.info("absorbing directory '%s' under sample name '%s' for user'%s' with Job ID: %i" % (command.dir, command.sample, command.user, JID))
 
 				if ' ' in command.sample:
