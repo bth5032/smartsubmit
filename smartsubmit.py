@@ -112,6 +112,8 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 
 	if hadoop_path_to_file[:7] == "/hadoop":
 		path_in_hadoop = hadoop_path_to_file[7:]
+	else:
+		path_in_hadoop = hadoop_path_to_file
 
 	filename = os.path.basename(hadoop_path_to_file)
 	print("constructing ssh call...")

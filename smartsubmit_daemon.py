@@ -139,7 +139,8 @@ def run_server():
 					socket.send_pyobj("Only user 'bhashemi' can add files.")
 					continue
 
-				print("absorbing sample file '%s' under sample name '%s' for user'%s'" % (command.hdp_path, command.sample, command.user))
+				print("absorbing sample file '%s' under sample name '%s' for user'%s' with Job ID: %i" % (command.hdp_path, command.sample, command.user, JID))
+				logging.info("absorbing sample file '%s' under sample name '%s' for user'%s' with Job ID: %i" % (command.hdp_path, command.sample, command.user, JID))
 
 				if ' ' in command.sample:
 					message = "There can not be a space in the sample name '%s'" % command.sample
@@ -197,7 +198,7 @@ def run_server():
 				job_files[JID] = outfile
 
 				print("absorbing directory '%s' under sample name '%s' for user'%s'" % (command.dir, command.sample, command.user))
-				logging.info("absorbing directory '%s' under sample name '%s' for user'%s'" % (command.dir, command.sample, command.user))
+				logging.info("absorbing directory '%s' under sample name '%s' for user'%s' with Job ID: %i" % (command.dir, command.sample, command.user, JID))
 
 				if ' ' in command.sample:
 					message = "There can not be a space in the sample name %s" % command.sample
