@@ -145,7 +145,7 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 			return message
 
 def checkDiskSpace(fsize, machine, disk):
-	ssh_syntax="ssh %s df %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4"
+	ssh_syntax="ssh %s df %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4" % (machine, disk)
 
 	ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
