@@ -254,11 +254,21 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 
 	print("Getting best disk to store the file...")
 
-	while Machine == None and LocalDirectory == None:
-		locationData = getBestDisk(sample_name, fsize) 
-		if checkDiskSpace(locationData):
+	tries=0
+	while (Machine == None and LocalDirectory == None) and tries<man.getNumDisks():
+		tries+=1
+		locationData = getBestDisk(sample_name, fsize)
+		print("Checking if the disk has enough space...") 
+		if checkDiskSpace(locationData["Machine"], locationData["LocalDirectory"], fsize):
 			Machine = locationData["Machine"]
 			LocalDirectory = locationData["LocalDirectory"]
+			print("Found a good disk %s:%s has enough space.")
+		else:
+			print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
+
+	if tries==man.getNumDisks():
+		print("ERROR: NOT ENOUGH DISK SPACE ON ANY DRIVE...")
+		return False
 		
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 	print("calling remote file move...")

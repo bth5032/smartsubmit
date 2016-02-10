@@ -260,7 +260,7 @@ class sqlman(object):
 		else:
 			return True
 
-	def updateDiskSpace(free_space, machine, disk):
+	def updateDiskSpace(self, free_space, machine, disk):
 		"""Runs SQL command to update the FreeSpace column in the Disks table for the disk specified by machine/disk."""
 		try:
 			self.cursor.execute("UPDATE Disks SET FreeSpace=%i WHERE Machine='%s' AND LocalDirectory='%s'" %(free_space, machine, disk))
@@ -269,3 +269,12 @@ class sqlman(object):
 		except sqlite3.OperationalError as err:
 			print("There was an error updating the table: %s" % err )
 			return None
+
+	def getNumDisks(self):
+		try:
+			self.cursor.execute("SELECT Count(*) FROM Disks")
+			self.connection.commit()
+			return self.cursor.fetchall()
+		except sqlite3.OperationalError as err:
+			print("There was an error reading from the table: %s" % err )
+			return 0
