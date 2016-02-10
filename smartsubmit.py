@@ -29,13 +29,13 @@ active_files = [] #holds a list of the files that are in the process of being ad
 
 def checkIfComputed(function):
 	disks = DiskRing("A", [1,2,3])
-	def return_func(sample_name):
+	def return_func(sample_name, fsize):
 		"""Checks if the sample_name was the last sample used, if so, it just returns the next drive on the list. Otherwise, construct a new list and then return the first drive"""
 		if disks.sample == sample_name:
 			return disks.getNext()
 
 		disks.setName(sample_name)
-		disks.setList(function(sample_name))
+		disks.setList(function(sample_name, fsize))
 		
 		return disks.getNext()
 
