@@ -2,13 +2,6 @@ import smartsubmit as ss
 import thread_printing as tp
 import zmq, time, threading, logging, os
 from ss_com import SmartSubmitCommand
-import getpass
-
-## Email Stuff
-import smtplib 
-import email.mime.text as mt
-import email.utils as eutils
-
 
 #Set up global job tracking
 JID=0 #Job ID
@@ -18,41 +11,7 @@ start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
 logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG, format='%(asctime)s | %(message)s', datefmt='%m-%d-%Y %H:%M:%S')
 logging.info("smartsubmit started at %s" % start_time)
 
-log_disk_helper = logging.getLogger("diskCheckHelper")
-log_disk_helper.setLevel(logging.DEBUG)
-log_disk_helper.addHandler(logging.FileHandler("diskCheckHelper_%s.log" % start_time))
-log_disk_helper.propagate=0
 
-
-def emailAdmins(message_body):
-	logging.info("Sending message to admins: \n------\n%s" % message_body)
-	server = smtplib.SMTP('smtp.ucsd.edu', 587)
-	server.starttls()
-	server.login(username, password)
-	msg = mt.MIMEText(message_body)
-	
-	if len(admins) > 1:
-		msg["To"] = ", ".join([eutils.formataddr(x) for x in admins])
-	else:
-		msg["To"] = eutils.formataddr(admins[0])
-
-	msg["From"] = eutils.formataddr(admins[0])
-	server.sendmail(admins[0][1], [x[1] for x in admins], msg.as_string())
-	server.quit()
-	
-def diskCheckHelper():
-	"""Checks the disks every 6 hours, if a disk has gone bad, it will email everyone in the admins list defined above."""
-	while True:
-		message = ""
-		#Run check disk for every disk in the table
-		for (disk_id, directory, machine, disk_num, working) in ss.man["Disks"]:
-			if working:
-				result=ss.checkDisk(directory, machine)
-				if not result == True:
-					message += "The disk mounted at '%s' on '%s'  may have gone down.\n%s\n" % (directory, machine, result)
-		if message:
-			emailAdmins(message)
-		time.sleep(60*60*6)
 
 def addFile(sample, hdp_path, user):
 	"""proxy to smartsubmit.absorbSampleFile, makes sure the file descriptor used for thread printing is closed"""
@@ -227,6 +186,9 @@ def run_server():
 		
 		elif command.command == "list sample files":
 			socket.send_pyobj(ss.man["SampleFiles"])
+
+		elif command.command == "list disks":
+			socket.send_pyobj(ss.man["Disks"])
 			
 		elif command.command == "check job":
 			output = checkOnJob(command.jid)
@@ -257,20 +219,6 @@ def run_server():
 		7. check job""" % command.command)
 
 		print(command)
-
-def checkPass():
-	server = smtplib.SMTP('smtp.ucsd.edu', 587)
-	server.starttls()
-	try:
-		server.login(username, password)
-		server.quit()
-		print("Connected to mail server successfully with provided login info. Please press Ctrl+z to suspend this process to the background, then run bg to start the process again.")
-		return True
-	except Exception as err:
-		server.quit()
-		print("Could not connect to mail server, shutting down")
-		return False
-
 
 try:
 	run_server()

@@ -76,6 +76,9 @@ def buildCommand(args):
 	elif args.list_samples:
 		comDict["command"] = "list sample files"
 
+	elif args.list_disks:
+		comDict["command"] = "list disks"
+
 	elif args.check_job:
 		comDict["command"] = "check job"
 		try:
@@ -246,7 +249,8 @@ parser.add_argument("-d", "--directory", help="specify directory to absorb", met
 parser.add_argument("-s", "--sample", help="specify the sample name", action="append", metavar="SAMPLE_NAME")
 parser.add_argument("-e", "--executable", help="specify the path to the executable which will run on the specified samples. Used with --run_jobs")
 parser.add_argument("-t", "--template", help="specify the location of the condor submit file, optional argument used with --run_job; default is ./condorFileTemplate", metavar="PATH_TO_TEMPLATE_FILE")
-parser.add_argument("--list_samples", help="List the samples in the database with along with their owner.", action="store_true")
+parser.add_argument("--list_samples", help="List the samples in the database along with their owner.", action="store_true")
+parser.add_argument("--list_disks", help="List the disks in the database.", action="store_true")
 parser.add_argument("-v","--view", help="Select how much information to display on each sample file (a number between 0 and 3), used with --list_samples.")
 parser.add_argument("-l", "--log", help="Choose the path the directory which stores the log files, used only with --run_jobs. If no directory given the logs will be stored in $PWD/logs/", metavar="PATH_TO_LOG_FILE", default="logs/")
 #parser.add_argument("--report_bad_disk", help="Used when a file could not be read by smartsubmit")
@@ -283,6 +287,9 @@ if command:
 				printSampleFiles(reply)
 		else:
 			printSampleFiles(reply)
+
+	if command.command == "list disks":
+		print(reply)
 
 	elif command.command == "run job":
 		if makeDirs(command.samples, command.log_dir):

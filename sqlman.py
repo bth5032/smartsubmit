@@ -69,6 +69,7 @@ class sqlman(object):
 								    Sample_ID      INTEGER       PRIMARY KEY AUTOINCREMENT,
 								    Sample         VARCHAR (200) NOT NULL,
 								    LocalDirectory VARCHAR (500) NOT NULL,
+								    Filesize          INTEGER NOT NULL,
 								    FileName       VARCHAR (100) NOT NULL,
 								    HadoopPath     VARCHAR (500) NOT NULL,
 								    Machine        VARCHAR (100) NOT NULL,
@@ -94,6 +95,7 @@ class sqlman(object):
 									`LocalDirectory`	varchar(500) NOT NULL,
 									`Machine`	varchar(100) NOT NULL,
 									`DiskNum`	INTEGER NOT NULL,
+									`FreeSpace` INTEGER,
 									`Working`	Boolean);""")
 			self.connection.commit()
 			return self.cursor.fetchall()
@@ -162,7 +164,7 @@ class sqlman(object):
 			print(message)
 			return message
 
-	def addSampleFile(self, sample, filename, localPath, hadoopDirectory, machine, user):
+	def addSampleFile(self, sample, filename, localPath, hadoopDirectory, machine, user, fsize):
 		"""Adds sample file to the SampleFiles table. Sample is the name of the sample set, localPath is the folder containing the file on the IOSlot slave, hadoopDirectory is the location of the file in Hadoop, and machine is the domain name of the slave."""
 		
 		if not localPath[-1:] == '/': #add trailing / to path if needed
@@ -176,6 +178,7 @@ class sqlman(object):
 					LocalDirectory, 
 					HadoopPath, 
 					Filename,
+					Filesize,
 					Machine, 
 					Disk_ID, 
 					User) 
@@ -183,12 +186,13 @@ class sqlman(object):
 						'%s',
 						'%s',
 						'%s',
+						'%i',
 						'%s',
 						(SELECT Disk_ID 
 							FROM Disks 
 							WHERE Machine='%s' 
 							AND LocalDirectory='%s'),
-						'%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, machine, machine, localPath, user)
+						'%s')""" % (sample, localPath+sample+'/', hadoopDirectory, filename, fsize, machine, machine, localPath, user)
 		
 		try:
 			self.x(query)
@@ -198,7 +202,7 @@ class sqlman(object):
 			print(message)
 			return message
 
-	def addDisk(self, path, machine, working=1):
+	def addDisk(self, path, machine, free_space, working=1):
 		"""Adds disk to the Disks table"""
 		
 		if not path[-1:] == '/': #add trailing / to path if needed
@@ -210,7 +214,7 @@ class sqlman(object):
 			return None
 
 		try:
-			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, Working) VALUES('%s', '%s', '%i') " % (path, machine, working) )
+			self.cursor.execute( "INSERT INTO Disks(LocalPath, Machine, FreeSpace, Working) VALUES('%s', '%s', %i, '%i') " % (path, machine, free_space, working) )
 			self.connection.commit()
 		except sqlite3.OperationalError as err:
 			print("There was an error adding the row: %s" % err)
@@ -255,3 +259,13 @@ class sqlman(object):
 			return False
 		else:
 			return True
+
+	def updateDiskSpace(free_space, machine, disk):
+		"""Runs SQL command to update the FreeSpace column in the Disks table for the disk specified by machine/disk."""
+		try:
+			self.cursor.execute("UPDATE Disks SET FreeSpace=%i WHERE Machine='%s' AND LocalDirectory='%s'" %(free_space, machine, disk))
+			self.connection.commit()
+			return self.cursor.fetchall()
+		except sqlite3.OperationalError as err:
+			print("There was an error updating the table: %s" % err )
+			return None

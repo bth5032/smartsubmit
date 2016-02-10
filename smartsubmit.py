@@ -144,6 +144,27 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 			print(message)
 			return message
 
+def checkDiskSpace(fsize, machine, disk):
+	ssh_syntax="ssh %s df %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4"
+
+	ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+	
+	out=ssh.communicate()
+
+	exit_code = ssh.returncode
+
+	try:
+		free_space=int(out[0][:-1])
+	except Exception as err:
+		return False
+
+	man.updateDiskSpace(machine, disk, free_space)
+	
+	if free_space > 10*fsize:
+		return True
+	else:
+		return False
+
 def sampleInTable(hadoop_path_to_file, sample_name):
 	"""
 	Returns: 
@@ -191,6 +212,10 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	filename = os.path.basename(hadoop_path_to_file)
 	hadoop_dir+='/' #add trailing / to path
 
+	if (hadoop_path_to_file[:7] == "/hadoop"):
+		fsize=os.path.getsize(hadoop_path_to_file)
+	else:
+		fsize=os.path.getsize("/hadoop"+hadoop_path_to_file)
 	#Check if there is whitespace in the sample_name, this will cause errors with the scheme of putting sample files into /BASEDIR/sample_name
 
 	if ' ' in sample_name:
@@ -228,19 +253,19 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		return message
 
 	print("Getting best disk to store the file...")
-	locationData = getBestDisk(sample_name) 
-	
-	if Machine == None:
-		Machine = locationData["Machine"]
-	if LocalDirectory == None:	
-		LocalDirectory = locationData["LocalDirectory"]
-	
+
+	while Machine == None and LocalDirectory == None:
+		locationData = getBestDisk(sample_name, fsize) 
+		if checkDiskSpace(locationData):
+			Machine = locationData["Machine"]
+			LocalDirectory = locationData["LocalDirectory"]
+		
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 	print("calling remote file move...")
 	status = moveRemoteFile(Machine, sample_dir, hadoop_path_to_file)
 
 	if status == True:
-		status = man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user)
+		status = man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user, fsize)
 		if status == True:
 			print("The Sample file %s has been succesfully absorbed." % filename)
 			logging.info("The Sample file %s has been succesfully absorbed." % filename)
@@ -307,7 +332,7 @@ def absorbDirectory(sample_name, dir_path, user):
 		logging.info("The user %s tried to add a non valid directory '%s'" % (user, dir_path))
 
 @checkIfComputed
-def getBestDisk(sample_name):
+def getBestDisk(sample_name, fsize):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
 	
 	1. the number of active samples on the disk
@@ -342,7 +367,9 @@ def getBestDisk(sample_name):
 					ON	
 						S.Disk_ID=Disks.Disk_ID
 					WHERE
-						Disks.Working='1' 
+						Disks.Working='1'
+					AND
+						Disks.FreeSpace > %i 
 					GROUP BY
 						Disks.Disk_ID
 					ORDER BY 
@@ -367,7 +394,7 @@ def getBestDisk(sample_name):
 						P.num_same, 
 						P.num_total ASC,
 						K.total_on_machine ASC,
-						P.DiskNum;""" % sample_name
+						P.DiskNum;""" % (sample_name, 10*fsize)
 
 	#The query above returns a list of the form 
 	# [Number of Active Sample Files on The Disk, Total Number of Sample Files on the Disk, Condor ID for Disk, Machine Address, Directory on Machine Disk is Mounted]]

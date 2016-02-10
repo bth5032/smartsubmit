@@ -28,14 +28,15 @@ then
 		location=`echo $f | cut -d ":" -f2`
 		hdloc=`echo $f | cut -d ":" -f3`
 		echo "$machine:$location"
-		ssh_output=`ssh $machine "wc -l $location"`
+		ssh_output=`ssh $machine "cksum $location"`
+		$exit_code="$?"
 		ret=`echo "$ssh_output" | cut -d ' ' -f1`
 		lastcount=`sqlite3 filetest.db "SELECT WordCount FROM FileInfo WHERE HadoopPath='$hdloc'"`
-		if [[ "$?" -eq 1 ]]
+		if [[ "$exit_code" -eq 1 ]]
 		then
 			Errors="true"
 			#The file did not exist....
-			Message+="FILE ERROR: The file at $machine:$location was not readable by wc. \n HadoopPath: $hdloc \n======================"
+			Message+="FILE ERROR: The file at $machine:$location was not readable by cksum. \n HadoopPath: $hdloc \n======================"
 		elif [[ "$lastcount" == "$ret" ]]
 		then
 			echo "Counts Equal"
