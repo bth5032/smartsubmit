@@ -254,26 +254,34 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 
 	print("Getting best disk to store the file...")
 
-	tries=0
-	while (Machine == None and LocalDirectory == None) and tries<man.getNumDisks():
-		tries+=1
-		locationData = getBestDisk(sample_name, fsize)
-		print("Checking if the disk has enough space...") 
-		if checkDiskSpace(locationData["Machine"], locationData["LocalDirectory"], fsize):
-			Machine = locationData["Machine"]
-			LocalDirectory = locationData["LocalDirectory"]
-			print("Found a good disk %s:%s has enough space.")
-		else:
-			print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
-
+	try:
+		tries=0
+		while (Machine == None and LocalDirectory == None) and tries<man.getNumDisks():
+			tries+=1
+			locationData = getBestDisk(sample_name, fsize)
+			print("Checking if the disk has enough space...") 
+			if checkDiskSpace(locationData["Machine"], locationData["LocalDirectory"], fsize):
+				Machine = locationData["Machine"]
+				LocalDirectory = locationData["LocalDirectory"]
+				print("Found a good disk %s:%s has enough space.")
+			else:
+				print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
+	except Exception as err:
+		print("There was an error allocating space for the file:\n%s" % err)
+		active_files.remove(hadoop_path_to_file)
+		return False
+		
 	if tries==man.getNumDisks():
 		print("ERROR: NOT ENOUGH DISK SPACE ON ANY DRIVE...")
+		active_files.remove(hadoop_path_to_file)
 		return False
 		
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
-	print("calling remote file move...")
-	status = moveRemoteFile(Machine, sample_dir, hadoop_path_to_file)
-
+	print("Attempting to move remote file...")
+	try:
+		status = moveRemoteFile(Machine, sample_dir, hadoop_path_to_file)
+	except Exception as err:
+		print("Recieved an error while trying to move the file \n%s" % err)
 	if status == True:
 		status = man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user, fsize)
 		if status == True:
