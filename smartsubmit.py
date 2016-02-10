@@ -267,7 +267,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 			else:
 				print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
 	except Exception as err:
-		print("There was an error allocating space for the file:\n%s" % err)
+		print("There was an error allocating space for the file:\n%s" % str(err))
 		active_files.remove(hadoop_path_to_file)
 		return False
 		
@@ -281,7 +281,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 	try:
 		status = moveRemoteFile(Machine, sample_dir, hadoop_path_to_file)
 	except Exception as err:
-		print("Recieved an error while trying to move the file \n%s" % err)
+		print("Recieved an error while trying to move the file \n%s" % str(err))
 	if status == True:
 		status = man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user, fsize)
 		if status == True:
