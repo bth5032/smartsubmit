@@ -160,7 +160,7 @@ def checkDiskSpace(fsize, machine, disk):
 		print("There was an error checking the disk space for %s:%s\n%s" % (machine, disk, str(err)))
 		return False
 
-	man.updateDiskSpace(machine, disk, free_space)
+	man.updateDiskSpace(free_space, machine, disk)
 
 	print("free space: %i" % free_space)
 
@@ -274,7 +274,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 			else:
 				print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
 	except Exception as err:
-		message = "There was an error allocating space for the file:%s\n%s" % (filename, str(err))
+		message = "There was an error allocating space for the file: %s\n%s" % (filename, str(err))
 		logging.error(message)
 		active_files.remove(hadoop_path_to_file)
 		return message
