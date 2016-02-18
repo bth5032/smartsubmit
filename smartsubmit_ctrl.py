@@ -213,7 +213,7 @@ def printSampleFiles(slist, view="Default"):
 			t.add_row(x)
 
 	elif view=="All":
-		title=["File ID", "Sample Name", "Local Directory", "Filename", "Hadoop Directory", "Condor ID", "Machine", "Disk ID", "Owner"]
+		title=["File ID", "Sample Name", "Local Directory", "Filename", "Hadoop Directory", "Condor ID", "Machine", "Disk ID", "Owner", "Filesize"]
 		t=PrettyTable(title)
 		sorted_list = sorted(slist, key=lambda x: x[1])
 		last_sample = sorted_list[0][1]
