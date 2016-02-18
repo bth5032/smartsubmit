@@ -265,6 +265,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 			tries+=1
 			print(tries)
 			locationData = getBestDisk(sample_name, fsize)
+			print(locationData)
 			print("Checking if the disk has enough space...") 
 			if checkDiskSpace(fsize, locationData["Machine"], locationData["LocalDirectory"]):
 				Machine = locationData["Machine"]
@@ -274,6 +275,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 				print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
 	except Exception as err:
 		message = "There was an error allocating space for the file: %s\n%s" % (filename, str(err))
+		print(message)
 		logging.error(message)
 		active_files.remove(hadoop_path_to_file)
 		return message
@@ -364,7 +366,7 @@ def getBestDisk(sample_name, fsize):
 	2. the number of total samples on the disk"""
 
 	#This query is really horrible. 
-
+	print("trace3")
 	query = """Select * From
 				(Select 
 					O.num_same, 
@@ -425,7 +427,7 @@ def getBestDisk(sample_name, fsize):
 	# [Number of Active Sample Files on The Disk, Total Number of Sample Files on the Disk, Condor ID for Disk, Machine Address, Directory on Machine Disk is Mounted]]
 
 	output = man.x(query)
-	
+	print("trace4")
 	#Return list of lists: [Condor ID, Machine, Local Directory]
 
 	return [ {"Machine" : str(x[4]), "LocalDirectory" :str(x[3])} for x in output ]
