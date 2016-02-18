@@ -274,7 +274,7 @@ class sqlman(object):
 		try:
 			self.cursor.execute("SELECT Count(*) FROM Disks")
 			self.connection.commit()
-			return self.cursor.fetchall()
+			return self.cursor.fetchall()[0][0]
 		except sqlite3.OperationalError as err:
 			print("There was an error reading from the table: %s" % err )
 			return 0

@@ -145,14 +145,13 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 			return message
 
 def checkDiskSpace(fsize, machine, disk):
-	ssh_syntax="ssh %s df %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4" % (machine, disk)
+	ssh_syntax="ssh %s \"df %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4\"" % (machine, disk)
 
 	ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
 	out=ssh.communicate()
 
 	exit_code = ssh.returncode
-	print("trace1")
 	try:
 		free_space=int(out[0][:-1])
 	except Exception as err:
@@ -160,7 +159,7 @@ def checkDiskSpace(fsize, machine, disk):
 		return False
 
 	man.updateDiskSpace(machine, disk, free_space)
-	print("trace2")
+
 	if free_space > 10*fsize:
 		return True
 	else:
@@ -255,22 +254,24 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 
 	print("Getting best disk to store the file...")
 
+	tries=0	
+
 	try:
-		tries=0
 		while (Machine == None and LocalDirectory == None) and tries<man.getNumDisks():
 			tries+=1
 			locationData = getBestDisk(sample_name, fsize)
 			print("Checking if the disk has enough space...") 
-			if checkDiskSpace(locationData["Machine"], locationData["LocalDirectory"], fsize):
+			if checkDiskSpace(fsize, locationData["Machine"], locationData["LocalDirectory"]):
 				Machine = locationData["Machine"]
 				LocalDirectory = locationData["LocalDirectory"]
 				print("Found a good disk %s:%s has enough space.")
 			else:
 				print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
 	except Exception as err:
-		print("There was an error allocating space for the file:\n%s" % str(err))
+		message = "There was an error allocating space for the file:\n%s" % str(err)
+		logging.error(message)
 		active_files.remove(hadoop_path_to_file)
-		return False
+		return message
 		
 	if tries==man.getNumDisks():
 		print("ERROR: NOT ENOUGH DISK SPACE ON ANY DRIVE...")
@@ -340,7 +341,7 @@ def absorbDirectory(sample_name, dir_path, user):
 				else:
 					print("succesfully added file, checking for more")
 
-		if status:
+		if not errors:
 			print("Directory succesfully added")
 		else:
 			message = "There were some errors in adding the directory to the database: \n------\n%s" % errors
