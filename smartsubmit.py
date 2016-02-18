@@ -152,9 +152,7 @@ def checkDiskSpace(fsize, machine, disk):
 	out=ssh.communicate()
 
 	exit_code = ssh.returncode
-	print("trace1")
 	try:
-		print(out)
 		free_space=int(out[0][:-1])
 	except Exception as err:
 		print("There was an error checking the disk space for %s:%s\n%s" % (machine, disk, str(err)))
@@ -162,7 +160,7 @@ def checkDiskSpace(fsize, machine, disk):
 
 	man.updateDiskSpace(free_space, machine, disk)
 
-	print("free space: %i" % free_space)
+	print("file size: %i \t free space: %i" % (fsize, free_space))
 
 	print("trace2")
 
