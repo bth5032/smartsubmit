@@ -152,6 +152,7 @@ def checkDiskSpace(fsize, machine, disk):
 	out=ssh.communicate()
 
 	exit_code = ssh.returncode
+	print("trace1")
 	try:
 		free_space=int(out[0][:-1])
 	except Exception as err:
@@ -159,6 +160,10 @@ def checkDiskSpace(fsize, machine, disk):
 		return False
 
 	man.updateDiskSpace(machine, disk, free_space)
+
+	print("free space: %i" % free_space)
+
+	print("trace2")
 
 	if free_space > 10*fsize:
 		return True
@@ -268,7 +273,7 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 			else:
 				print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
 	except Exception as err:
-		message = "There was an error allocating space for the file:\n%s" % str(err)
+		message = "There was an error allocating space for the file:%s\n%s" % (filename, str(err))
 		logging.error(message)
 		active_files.remove(hadoop_path_to_file)
 		return message
