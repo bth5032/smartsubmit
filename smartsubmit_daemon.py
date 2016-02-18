@@ -8,7 +8,7 @@ JID=0 #Job ID
 job_files = {}
 
 start_time=time.strftime("%m-%d-%Y_%H:%M:%S")
-logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG, format='%(asctime)s | %(message)s', datefmt='%m-%d-%Y %H:%M:%S')
+logging.basicConfig(filename='smartsubmit_%s.log' % start_time, level=logging.DEBUG, format='%(asctime)s -- %(funcName)s | %(message)s', datefmt='%m-%d-%Y %H:%M:%S')
 logging.info("smartsubmit started at %s" % start_time)
 
 
