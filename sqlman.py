@@ -167,7 +167,6 @@ class sqlman(object):
 		else:
 			return "Can not look up disk info without an id or a machine directory pair. Please specify one of these."
 
-
 	def updateSampleName(self, newSample, hadoopDirectory, filename):
 		"""Allows the user to update the sample name of a file."""
 		query = """UPDATE SampleFiles 
@@ -273,7 +272,7 @@ class sqlman(object):
 
 	def getFilesInSample(self, sample_name):
 		try:
-			rows = self.x("SELECT LocalDirectory, HadoopPath, FileName, Machine FROM WHERE Sample = '%s'" % sample_name)
+			rows = self.x("SELECT LocalDirectory, HadoopPath, FileName, Machine FROM SampleFiles WHERE Sample = '%s'" % sample_name)
 			return [{"LocalDirectory": y[0], "HadoopPath": y[1], "FileName": y[2], "Machine": y[3] } for y in rows]
 		except sqlite3.OperationalError as err:
 			print("There was an error getting the files from the table: %s" % err )
