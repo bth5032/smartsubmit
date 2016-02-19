@@ -365,7 +365,6 @@ def dropSample(sample_name):
 		else:
 			print("There were some errors removing %s from in %s from the system. Output:\n%s" % (fname, sample_name, ret))
 
-
 def getBestDisk(sample_name, fsize):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
 	
