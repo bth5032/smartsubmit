@@ -108,7 +108,7 @@ def renderDisks():
 	dl = [ {"id": x[0]," machine": x[2], "directory": x[1], "used": 0, "free": x[4] } for x in man.listDisks() ]
 
 	for disk in dl:
-		disk["used"]=man.diskUsage(disk["id"])
+		disk["used"]=man.diskUsage(disk["id"])[0]
 
 	print(dl)
 
