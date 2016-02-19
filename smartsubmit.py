@@ -113,6 +113,7 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 			return message
 
 def getFreeDiskSpace(machine, disk):
+	"""Uses a remote ssh call to check the number of free bytes in the disk specified using df. Returns the number of bytes if the output is what is expected from the remote machine, otherwise returns None."""
 	ssh_syntax="ssh %s \"df -B1 %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4\"" % (machine, disk)
 
 	ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
@@ -128,6 +129,7 @@ def getFreeDiskSpace(machine, disk):
 		return None
 
 def checkDiskSpace(fsize, machine, disk):
+	"""Determines whether there is enough disk space on machine:disk to store the file. Checks that free_space > DISK_OVERHEAD+fsize."""
 	free_space = getFreeDiskSpace(machine, disk)
 	
 	if free_space:
@@ -344,7 +346,7 @@ def absorbDirectory(sample_name, dir_path, user):
 		logging.info("The user %s tried to add a non valid directory '%s'" % (user, dir_path))
 
 def dropSample(sample_name):
-
+	"""Calls deleteSampleFile for each file in the sample specified."""
 	flist = man.getFilesInSample(sample_name)
 
 	for sinfo in flist:
@@ -466,7 +468,7 @@ def computeJob(sample_name, user):
 		return False
 
 def deleteSampleFile(hadoop_path_to_file, LAZY=False):
-	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory"""
+	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory. If the file is removed, returns True, otherwise returns an error message."""
 
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)+'/'
 	filename = os.path.basename(hadoop_path_to_file)
@@ -476,7 +478,7 @@ def deleteSampleFile(hadoop_path_to_file, LAZY=False):
 	if not LAZY:
 		message += "Attempting to delete the file from the remote machine\n"
 
-		(machine, local_dir, disk_id) = man.x("SELECT Machine, LocalDirectory, Disk_ID FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))[0]
+		(machine, local_dir, disk_id, sample) = man.x("SELECT Machine, LocalDirectory, Disk_ID, Sample FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoop_dir, filename))[0]
 
 		if man.working(disk_id):
 			ssh_syntax = "ssh %s rm %s " % (machine, local_dir+filename)
@@ -488,21 +490,20 @@ def deleteSampleFile(hadoop_path_to_file, LAZY=False):
 			exit_code = rm.returncode
 
 			if exit_code == 0:
-				message += "The sample was succesfully deleted from the remote machine \n"
-				logging.info("The sample '%s' was succesfully deleted from the remote directory" % hadoop_path_to_file)	
+				message += "The file %s in sample '%s' was succesfully deleted from the remote directory \n" % (filename, sample)
+				logging.info("The file %s in sample '%s' was succesfully deleted from the remote directory" % (filename, sample))
 			else:
-				message += "The sample could not be deleted. rm failed with error code %s \n" % str(exit_code)
-				
-				logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
+				message += "There was an error removing %s in sample '%s'. rm failed with exit code %s \n" % (filename, sample, str(exit_code))
+				logging.error("There was an error removing %s in sample '%s'. rm failed with exit code %s" % (filename, sample, str(exit_code)))
 		else:
-			logging.info("Will not attempt to remove sample file '%s' from the disk with ID %s because it is tageed as not working." % (hadoop_path_to_file, str(disk_id)))
+			disk_info = man.diskInfo(disk_id=disk_id)
+			message += "Will not attempt to remove file %s in sample %s from %s:%s because it is tagged as not working. \n" % (filename, sample, disk_id["Machine"], disk_id["LocalDirectory"])
+			logging.info("Will not attempt to remove file %s in sample %s from %s:%s because it is tagged as not working." % (filename, sample, disk_id["Machine"], disk_id["LocalDirectory"]))
 		
 
 	man.removeSample(hadoop_dir, filename)
 
-	logging.info("The sample '%s' was succesfully removed from the table." % hadoop_path_to_file)
-
-	message += "The sample was succesfully removed from the table"
+	message += "The file %s was succesfully removed from the table" % filename
 
 	return message
 

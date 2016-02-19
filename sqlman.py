@@ -147,6 +147,27 @@ class sqlman(object):
 			print("There was an error dropping the table: %s" % err )
 			return None
 
+	def diskInfo(self, disk_id=None, machine=None, directory=None):
+		"""Returns a dictionary with keys Machine, LocalDirectory, FreeSpace, Working, Disk_ID for disk with given ID or machine directory pair. On error returns an error message"""
+		if disk_id:
+			try:
+				row = self.man.x("SELECT Machine, LocalDirectory, FreeSpace, Working, Disk_ID FROM Disks WHERE Disk_ID = '%s'" % str(disk_id))[0]
+				return {"Machine": row[0], "LocalDirectory": row[1], "FreeSpace": row[2], "Working": row[3], "Disk_ID": row[4] }
+			except sqlite3.OperationalError as err:
+				message= "There was an error looking up the data: %s" % err
+				return(message)
+
+		elif (machine and directory):
+			try:
+				row = self.man.x("SELECT Machine, LocalDirectory, FreeSpace, Working, Disk_ID FROM Disks WHERE Machine = '%s' AND LocalDirectory='%s' " % (machine, directory))[0]
+				return {"Machine": row[0], "LocalDirectory": row[1], "FreeSpace": row[2], "Working": row[3], "Disk_ID": row[4] }
+			except sqlite3.OperationalError as err:
+				message= "There was an error looking up the data: %s" % err
+				return(message)
+		else:
+			return "Can not look up disk info without an id or a machine directory pair. Please specify one of these."
+
+
 	def updateSampleName(self, newSample, hadoopDirectory, filename):
 		"""Allows the user to update the sample name of a file."""
 		query = """UPDATE SampleFiles 
