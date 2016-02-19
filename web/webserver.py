@@ -110,6 +110,8 @@ def renderDisks():
 	for disk in dl:
 		disk["used"]=man.diskUsage(disk["id"])
 
+	print(dl)
+
 	return render_template("disks.html", disk_list=dl)
 
 @app.route("/get_sample_files/<sname>.json")
