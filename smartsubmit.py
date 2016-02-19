@@ -363,7 +363,7 @@ def dropSample(sample_name):
 		if ret==True:
 			print("File %s in %s removed from the system" % (fname, sample_name))
 		else:
-			print("There were some errors removing %s from in %s from the system. Output:\n%s" (fname, sample_name, ret))
+			print("There were some errors removing %s from in %s from the system. Output:\n%s" % (fname, sample_name, ret))
 
 
 def getBestDisk(sample_name, fsize):
