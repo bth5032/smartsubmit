@@ -26,7 +26,7 @@
           <tr>
             <td style="width: 40%">{{ s.name }}</td>
             <td style="width: 30%">{{ s.count }}</td>
-            <td style="width: 30%">{{ s.owner }}</td>
+            <script> document.write(getReadableFileSizeString({{ s.size }}))</script>
           </tr>
         {% endfor %}
       </table>
