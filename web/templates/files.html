@@ -29,7 +29,7 @@ tr.show_more {
           <tr class="show_more" id="tr_{{ s.name }}">
             <td style="width: 40%">{{ s.name }}</td>
             <td style="width: 30%">{{ s.count }}</td>
-            <td style="width: 30%"><script> document.write(getReadableFileSizeString({{ s.size }}))</script></td>
+            <td style="width: 30%"><script>document.write(getReadableFileSizeString({{ s.size }}))</script></td>
           </tr>
         {% endfor %}
     </table>

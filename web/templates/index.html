@@ -20,13 +20,13 @@
         <tr>
           <td style="width: 40%"><strong>Name</strong></td>
           <td style="width: 30%"><strong>Number of Files</strong></td>
-          <td style="width: 30%"><strong>Owner</strong></td>
+          <td style="width: 30%"><strong>Sample Size</strong></td>
         </tr>
       <p>{% for s in sample_list %}
           <tr>
             <td style="width: 40%">{{ s.name }}</td>
             <td style="width: 30%">{{ s.count }}</td>
-            <script> document.write(getReadableFileSizeString({{ s.size }}))</script>
+            <td style="width: 30%"><script>document.write(getReadableFileSizeString({{ s.size }}))</script></td>
           </tr>
         {% endfor %}
       </table>
