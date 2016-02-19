@@ -47,9 +47,10 @@ tr.show_more {
   <div class="col-lg-12">
     <table class="table-striped" id="more_info" style="width: 100%; cellpadding: 20px">
         <tr>
+          <td style="width: 15%"><strong>Sample</strong></td>
           <td style="width: 10%"><strong>File Name</strong></td>
-          <td style="width: 10%"><strong>Size</strong></td>
-          <td style="width: 40%"><strong>Local Directory</strong></td>
+          <td style="width: 5%"><strong>Size</strong></td>
+          <td style="width: 30%"><strong>Local Directory</strong></td>
           <td style="width: 40%"><strong>Hadoop Directory</strong></td>
         </tr>
       <table>
@@ -59,11 +60,12 @@ tr.show_more {
 
   <script type="text/javascript">
 
-  function addRow(fname, ldir, hdir, size){
+  function addRow(fname, ldir, hdir, size, sample){
     $('#more_info tr:last').after("<tr class='fileinfo'>\
+      <td style='width: 15%'>"+ sample +"</td>\
       <td style='width: 10%'>"+ fname +"</td>\
-      <td style='width: 10%'>"+ getReadableFileSizeString(size) +"</td>\
-      <td style='width: 40%'>"+ ldir +"</td>\
+      <td style='width: 5%'>"+ getReadableFileSizeString(size) +"</td>\
+      <td style='width: 30%'>"+ ldir +"</td>\
       <td style='width: 40%'>"+ hdir +"</td>\
       </tr>");
   }
@@ -75,8 +77,9 @@ tr.show_more {
       var ldir = rows[i][3]+":"+rows[i][1]; //Machine:Local Directory
       var size = rows[i][4] //Machine:Local Directory
       var hdir = rows[i][2]; //Hadoop Directory
+      var sample = rows[i][5]; //Hadoop Directory
 
-      addRow(fname, ldir, hdir, size);
+      addRow(fname, ldir, hdir, size, sample);
     }
   }
 
