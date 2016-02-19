@@ -104,12 +104,12 @@ def renderFiles():
 	return render_template("files.html", sample_list=sample_list)
 
 @app.route("/disks")
-def renderFiles():
+def renderDisks():
 	dl = [ {"id": x[0]," machine": x[2], "directory": x[1], "used": 0, "free": x[4] } for x in man.listDisks() ]
 
 	for disk in dl:
 		disk[used]=man.diskUsage(disk["id"])
-		
+
 	return render_template("disks.html", disk_list=dl)
 
 @app.route("/get_sample_files/<sname>.json")
