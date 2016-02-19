@@ -130,7 +130,7 @@ def run_server():
 					continue
 
 				print("deleting sample file '%s'" % hadoop_path_to_file)
-				message = ss.deleteSampleFile(hadoop_path_to_file, command.user)
+				message = ss.deleteSampleFile(hadoop_path_to_file)
 				print(message)
 				socket.send_pyobj(message)
 			except Exception as err:

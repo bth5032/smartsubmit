@@ -343,6 +343,21 @@ def absorbDirectory(sample_name, dir_path, user):
 		print("The path specified, '%s', is not a valid directory. Recieved %s from checktype, should get 'dir' for directory." % (dir_path, str(loc_type)))
 		logging.info("The user %s tried to add a non valid directory '%s'" % (user, dir_path))
 
+def dropSample(sample_name):
+
+	flist = man.getFilesInSample(sample_name)
+
+	for sinfo in flist:
+		fname = sinfo["FileName"]
+		hdir = sinfo["HadoopPath"]
+		fdir = sinfo["LocalDirectory"]
+		machine = sinfo["Machine"]
+		
+		if not hdir[-1] == '/':
+			hdir+='/'
+		
+		deleteSampleFile(hdir+fname)
+
 def getBestDisk(sample_name, fsize):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
 	
@@ -450,13 +465,11 @@ def computeJob(sample_name, user):
 	else:
 		return False
 
-def deleteSampleFile(hadoop_path_to_file, user, LAZY=False):
+def deleteSampleFile(hadoop_path_to_file, LAZY=False):
 	"""Removes sample file from the SampleFiles table, if LAZY is false, also send a remote command to remove the file from the remote directory"""
 
 	hadoop_dir = os.path.dirname(hadoop_path_to_file)+'/'
 	filename = os.path.basename(hadoop_path_to_file)
-
-	owner = man.getOwner(hadoop_dir, filename)
 
 	message=""
 
@@ -483,10 +496,6 @@ def deleteSampleFile(hadoop_path_to_file, user, LAZY=False):
 				logging.error("The sample '%s' was not succesfully removed, exit status: %s " % (hadoop_path_to_file, str(exit_code)))
 		else:
 			logging.info("Will not attempt to remove sample file '%s' from the disk with ID %s because it is tageed as not working." % (hadoop_path_to_file, str(disk_id)))
-
-	if not owner == user:
-		logging.info("'%s' is removing the file %s%s, but the user who added it is '%s'." % (user, hadoop_dir, filename, owner))
-		message += "The file you are removing was added by the user '%s'.\n" % owner
 		
 
 	man.removeSample(hadoop_dir, filename)

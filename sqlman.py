@@ -250,6 +250,14 @@ class sqlman(object):
 
 		return list_of_dirs
 
+	def getFilesInSample(self, sample_name):
+		try:
+			rows = self.x("SELECT LocalDirectory, HadoopPath, FileName, Machine FROM WHERE Sample = '%s'" % sample_name)
+			return [{"LocalDirectory": y[0], "HadoopPath": y[1], "FileName": y[2], "Machine": y[3] } for y in rows]
+		except sqlite3.OperationalError as err:
+			print("There was an error getting the files from the table: %s" % err )
+			return None
+
 	def getDict(self):
 		return {"Disks":self.__getitem__("Disks"), "SampleFiles":self.__getitem__("SampleFiles")}
 
