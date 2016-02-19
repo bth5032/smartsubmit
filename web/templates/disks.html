@@ -27,7 +27,7 @@ tr.show_more {
           <td style="width: 20%"><strong>Free Space</strong></td>
         </tr>
       {% for d in disk_list %}
-          <tr class="show_more" id="tr_{{ s.name }}">
+          <tr class="show_more" id="tr_{{ d.id }}">
             <td style="width: 30%">{{ d.machine }}</td>
             <td style="width: 30%">{{ d.directory }}</td>
             <td style="width: 20%"><script>document.write(getReadableFileSizeString({{ d.used }}))</script></td>
