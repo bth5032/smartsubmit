@@ -153,7 +153,7 @@ class sqlman(object):
 		"""Returns a dictionary with keys Machine, LocalDirectory, FreeSpace, Working, Disk_ID for disk with given ID or machine directory pair. On error returns an error message"""
 		if disk_id:
 			try:
-				row = self.man.x("SELECT Machine, LocalDirectory, FreeSpace, Working, Disk_ID FROM Disks WHERE Disk_ID = '%s'" % str(disk_id))[0]
+				row = self.x("SELECT Machine, LocalDirectory, FreeSpace, Working, Disk_ID FROM Disks WHERE Disk_ID = '%s'" % str(disk_id))[0]
 				return {"Machine": row[0], "LocalDirectory": row[1], "FreeSpace": row[2], "Working": row[3], "Disk_ID": row[4] }
 			except sqlite3.OperationalError as err:
 				message= "There was an error looking up the data: %s" % err
@@ -161,7 +161,7 @@ class sqlman(object):
 
 		elif (machine and directory):
 			try:
-				row = self.man.x("SELECT Machine, LocalDirectory, FreeSpace, Working, Disk_ID FROM Disks WHERE Machine = '%s' AND LocalDirectory='%s' " % (machine, directory))[0]
+				row = self.x("SELECT Machine, LocalDirectory, FreeSpace, Working, Disk_ID FROM Disks WHERE Machine = '%s' AND LocalDirectory='%s' " % (machine, directory))[0]
 				return {"Machine": row[0], "LocalDirectory": row[1], "FreeSpace": row[2], "Working": row[3], "Disk_ID": row[4] }
 			except sqlite3.OperationalError as err:
 				message= "There was an error looking up the data: %s" % err
