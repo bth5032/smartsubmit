@@ -118,7 +118,7 @@ def returnSampleFiles(sname):
 	return Response(json_dump(rows), mimetype='application/json')
 
 @app.route("/get_sample_files/<disk_id>.json")
-def returnSampleFiles(disk_id):
+def returnDiskFiles(disk_id):
 	rows = man.x("Select FileName, LocalDirectory, HadoopPath, Machine, FileSize From SampleFiles Where Disk_ID=%s" % disk_id)
 	return Response(json_dump(rows), mimetype='application/json')
 
