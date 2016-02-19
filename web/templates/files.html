@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 
 {% block head %}
+<script type="text/javascript">
+    
+  function getReadableFileSizeString(fileSizeInBytes) {
+
+    var i = -1;
+    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+    do {
+        fileSizeInBytes = fileSizeInBytes / 1024;
+        i++;
+    } while (fileSizeInBytes > 1024);
+
+    return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
+  };
+  </script>
+
 <style>
 tr.show_more {
     cursor: pointer;
@@ -23,13 +38,13 @@ tr.show_more {
         <tr>
           <td style="width: 40%"><strong>Name</strong></td>
           <td style="width: 30%"><strong>Number of Files</strong></td>
-          <td style="width: 30%"><strong>Owner</strong></td>
+          <td style="width: 30%"><strong>Sample Size</strong></td>
         </tr>
       {% for s in sample_list %}
           <tr class="show_more" id="tr_{{ s.name }}">
             <td style="width: 40%">{{ s.name }}</td>
             <td style="width: 30%">{{ s.count }}</td>
-            <td style="width: 30%">{{ s.owner }}</td>
+            <td style="width: 30%"><script> document.write(getReadableFileSizeString({{ s.size }}))</script></td>
           </tr>
         {% endfor %}
     </table>
@@ -46,7 +61,7 @@ tr.show_more {
     <table class="table-striped" id="more_info" style="width: 100%; cellpadding: 20px">
         <tr>
           <td style="width: 10%"><strong>File Name</strong></td>
-          <td style="width: 10%"><strong>Owner</strong></td>
+          <td style="width: 10%"><strong>Size</strong></td>
           <td style="width: 40%"><strong>Local Directory</strong></td>
           <td style="width: 40%"><strong>Hadoop Directory</strong></td>
         </tr>
@@ -56,11 +71,11 @@ tr.show_more {
 </div>
 
   <script type="text/javascript">
-    
-  function addRow(fname, ldir, hdir, owner){
+
+  function addRow(fname, ldir, hdir, size){
     $('#more_info tr:last').after("<tr class='fileinfo'>\
       <td style='width: 10%'>"+ fname +"</td>\
-      <td style='width: 10%'>"+ owner +"</td>\
+      <td style='width: 10%'>"+ getReadableFileSizeString(size) +"</td>\
       <td style='width: 40%'>"+ ldir +"</td>\
       <td style='width: 40%'>"+ hdir +"</td>\
       </tr>");
@@ -71,10 +86,10 @@ tr.show_more {
     for (var i in rows) {
       var fname = rows[i][0];
       var ldir = rows[i][3]+":"+rows[i][1]; //Machine:Local Directory
+      var size = rows[i][4] //Machine:Local Directory
       var hdir = rows[i][2]; //Hadoop Directory
-      var owner = rows[i][4];
 
-      addRow(fname, ldir, hdir, owner);
+      addRow(fname, ldir, hdir, size);
     }
   }
 
@@ -92,6 +107,9 @@ tr.show_more {
     });
     $("#more_info").show()
   })
+
+  $(".sample_size").innerHTML=getReadableFileSizeString($(this).innerHTML)
+
   </script>
 <div class="container">
 {% endblock %}

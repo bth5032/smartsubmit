@@ -1,24 +1,5 @@
 import sqlman, sqlite3, itertools, os, subprocess, sys, logging
 
-
-class DiskRing(object):
-	"""Holds the list of disks available for new sample files. The list of directories is ordered by the method getBestDisk, which attempts to spread the sample files over disks and machines as much as possible.""" 
-	def __init__(self, sample, ordered_list):
-		self.sample = sample
-		self.circle = itertools.cycle(ordered_list)
-	
-	def getNext(self):
-		"""Return the best location for a new sample file"""
-		return next(self.circle)
-
-	def setName(self, name):
-		"""Changes the sample name, this should only be called by checkIfComputed when it is changing the 'active' sample. If properly used, this should never be called without a setList call as well."""
-		self.sample = name
-
-	def setList(self, ordered_list):
-		"""This method updates the list of directories. It should only be called when the sample has been changed by checkIfComputed."""
-		self.circle = itertools.cycle(ordered_list)
-
 database_file = "test.db"
 working_dir = "."
 
@@ -26,20 +7,7 @@ connection = sqlite3.connect(database_file, check_same_thread=False)
 man = sqlman.sqlman(connection, database_file, working_dir)
 
 active_files = [] #holds a list of the files that are in the process of being added 
-
-def checkIfComputed(function):
-	disks = DiskRing("A", [1,2,3])
-	def return_func(sample_name, fsize):
-		"""Checks if the sample_name was the last sample used, if so, it just returns the next drive on the list. Otherwise, construct a new list and then return the first drive"""
-		if disks.sample == sample_name:
-			return disks.getNext()
-
-		disks.setName(sample_name)
-		disks.setList(function(sample_name, fsize))
-		
-		return disks.getNext()
-
-	return return_func
+DISK_OVERHEAD=3000000000 #The extra space to require before we'll store a file on the disk.
 
 def makeRemoteDir(machine, sample_dir):
 	"""Makes sample_dir on remote machine if it's not already there"""
@@ -144,30 +112,42 @@ def moveRemoteFile(machine, sample_dir, hadoop_path_to_file, count=0):
 			print(message)
 			return message
 
-def checkDiskSpace(fsize, machine, disk):
-	ssh_syntax="ssh %s \"df %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4\"" % (machine, disk)
+def getFreeDiskSpace(machine, disk):
+	ssh_syntax="ssh %s \"df -B1 %s | tail -n1 | tr -s [:space:] '|' | cut -d '|' -f4\"" % (machine, disk)
 
 	ssh = subprocess.Popen(ssh_syntax, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 	
 	out=ssh.communicate()
-	print("trace1")
 
 	exit_code = ssh.returncode
 	try:
 		free_space=int(out[0][:-1])
-		print("file size: %i \t free space: %i" % (fsize, free_space))
-	except Exception as err:
+		return free_space
+	except StandardError as err:
 		print("There was an error checking the disk space for %s:%s\n%s" % (machine, disk, str(err)))
+		return None
+
+def checkDiskSpace(fsize, machine, disk):
+	free_space = getFreeDiskSpace(machine, disk)
+	
+	if free_space:
+		man.updateDiskSpace(free_space, machine, disk)
+	else:
 		return False
 
-	man.updateDiskSpace(free_space, machine, disk)
-
-	print("trace2")
-
-	if free_space > 10*fsize:
+	if free_space > DISK_OVERHEAD+fsize:
 		return True
 	else:
 		return False
+
+def updateDiskSpace():
+	"""Updates the free space on all the working disks."""
+
+	for disk_info in man.listDisks():
+		machine, disk = (disk_info[2], disk_info[1])
+		free_space = getFreeDiskSpace(machine, disk)
+		if free_space:
+			man.updateDiskSpace(free_space, machine, disk)
 
 def sampleInTable(hadoop_path_to_file, sample_name):
 	"""
@@ -256,40 +236,45 @@ def absorbSampleFile(sample_name, hadoop_path_to_file, user, Machine = None, Loc
 		active_files.remove(hadoop_path_to_file)
 		return message
 
+
+	#Get best disk for the file
 	print("Getting best disk to store the file...")
 
 	tries=0	
+	locationData = getBestDisk(sample_name, fsize)
 
-	try:
-		while (Machine == None and LocalDirectory == None) and tries<man.getNumDisks():
-			tries+=1
-			print(tries)
-			locationData = getBestDisk(sample_name, fsize)
-			print(locationData)
-			print("Checking if the disk has enough space...") 
-			if checkDiskSpace(fsize, locationData["Machine"], locationData["LocalDirectory"]):
-				Machine = locationData["Machine"]
-				LocalDirectory = locationData["LocalDirectory"]
-				print("Found a good disk %s:%s has enough space.")
-			else:
-				print("Not enough space on %s:%s." % (locationData["Machine"], locationData["LocalDirectory"]))
-	except Exception as err:
-		message = "There was an error allocating space for the file: %s\n%s" % (filename, str(err))
-		print(message)
-		logging.error(message)
-		active_files.remove(hadoop_path_to_file)
-		return message
+	#Check that disk has enough space.
+	while (Machine == None and LocalDirectory == None) and tries<len(locationData):
+		print("Checking if the disk has enough space...") 
+		try:
+			space_check = checkDiskSpace(fsize, locationData[tries]["Machine"], locationData[tries]["LocalDirectory"])
+		except StandardError as err:
+			space_check = False
+			message="There was an error when trying to check for free space on %s:%s\n%s" (locationData[tries]["Machine"], locationData[tries]["LocalDirectory"], repr(err))
+			print(message)
+			logging.error(message)
 		
-	if tries==man.getNumDisks():
-		print("ERROR: NOT ENOUGH DISK SPACE ON ANY DRIVE...")
+		if space_check:
+			Machine = locationData[tries]["Machine"]
+			LocalDirectory = locationData[tries]["LocalDirectory"]
+			print("Found a good disk %s:%s has enough space." % (Machine, LocalDirectory))
+		else:
+			print("Could not verify there was enough space on %s:%s." % (locationData[tries]["Machine"], locationData[tries]["LocalDirectory"]))
+			tries+=1
+
+	#If machine and local dir were not set then no disk had enough space.
+	if Machine==None or LocalDirectory==None:
+		message="Not enough space on any drive for %s in sample %s" % (filename, sample_name)
 		active_files.remove(hadoop_path_to_file)
-		return False
+		print(message)
+		logging.warning(message)
+		return message
 		
 	sample_dir = LocalDirectory+sample_name+"/" #Construct sample directory path
 	print("Attempting to move remote file...")
 	try:
 		status = moveRemoteFile(Machine, sample_dir, hadoop_path_to_file)
-	except Exception as err:
+	except StandardError as err:
 		print("Recieved an error while trying to move the file \n%s" % str(err))
 	if status == True:
 		status = man.addSampleFile(sample_name, filename, LocalDirectory, hadoop_dir, Machine, user, fsize)
@@ -358,7 +343,6 @@ def absorbDirectory(sample_name, dir_path, user):
 		print("The path specified, '%s', is not a valid directory. Recieved %s from checktype, should get 'dir' for directory." % (dir_path, str(loc_type)))
 		logging.info("The user %s tried to add a non valid directory '%s'" % (user, dir_path))
 
-@checkIfComputed
 def getBestDisk(sample_name, fsize):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
 	
@@ -366,7 +350,6 @@ def getBestDisk(sample_name, fsize):
 	2. the number of total samples on the disk"""
 
 	#This query is really horrible. 
-	print("trace3")
 	query = """Select * From
 				(Select 
 					O.num_same, 
@@ -421,13 +404,12 @@ def getBestDisk(sample_name, fsize):
 						P.num_same, 
 						P.num_total ASC,
 						K.total_on_machine ASC,
-						P.DiskNum;""" % (sample_name, 10*fsize)
+						P.DiskNum;""" % (sample_name, DISK_OVERHEAD+fsize)
 
 	#The query above returns a list of the form 
 	# [Number of Active Sample Files on The Disk, Total Number of Sample Files on the Disk, Condor ID for Disk, Machine Address, Directory on Machine Disk is Mounted]]
 
 	output = man.x(query)
-	print("trace4")
 	#Return list of lists: [Condor ID, Machine, Local Directory]
 
 	return [ {"Machine" : str(x[4]), "LocalDirectory" :str(x[3])} for x in output ]

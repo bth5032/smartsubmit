@@ -43,13 +43,17 @@ def frontpageSamples():
 	"""Takes in the list of the sample files table from the server and pretty prints it to the screen."""
 	slist=man["SampleFiles"]
 	samples={}
-	stripped_list = [[x[1],x[8]] for x in slist]
+	stripped_list = [[x[1],x[9]] for x in slist]
 	for x in stripped_list:
 		if x[0] in samples:
 			samples[x[0]]["count"] += 1
+			if(x[1]):
+				samples[x[0]]["size"] += int(x[1])
 		else:
-			samples[x[0]] = {"name": x[0], "count": 1, "owner": x[1]}
-
+			if (x[1]):
+				samples[x[0]] = {"name": x[0], "count": 1, "size": x[1]}
+			else:
+				samples[x[0]] = {"name": x[0], "count": 1, "size": 0}
 	return samples
 
 def rawLogs(count=3):
@@ -76,7 +80,8 @@ def rawLogs(count=3):
 
 def renderedLogs(count=20):
 	log_list=rawLogs(count)
-	return [ [log_list[i][0:19], log_list[i][40:]] for i in range(0,len(log_list)) ]
+	#Each row is DATE TIME -- run_server | recieved command: <COMMAND>
+	return [ [log_list[i][0:19], log_list[i][54:]] for i in range(0,len(log_list)) ]
 
 def getUptime(count=3):
 	#f=open("/root/ss_testing/weblog")
@@ -100,7 +105,7 @@ def renderFiles():
 
 @app.route("/get_sample_files/<sname>.json")
 def returnSampleFiles(sname):
-	rows = man.x("Select FileName, LocalDirectory, HadoopPath, Machine, User From SampleFiles Where Sample=='%s'" % sname)
+	rows = man.x("Select FileName, LocalDirectory, HadoopPath, Machine, FileSize From SampleFiles Where Sample=='%s'" % sname)
 	return Response(json_dump(rows), mimetype='application/json')
 
 @app.route("/howto")
