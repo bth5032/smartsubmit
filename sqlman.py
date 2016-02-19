@@ -95,8 +95,8 @@ class sqlman(object):
 									`LocalDirectory`	varchar(500) NOT NULL,
 									`Machine`	varchar(100) NOT NULL,
 									`DiskNum`	INTEGER NOT NULL,
-									`FreeSpace` INTEGER,
-									`Working`	Boolean);""")
+									`Working`	Boolean,
+									`FreeSpace` INTEGER);""")
 			self.connection.commit()
 			return self.cursor.fetchall()
 		except sqlite3.OperationalError as err:
