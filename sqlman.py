@@ -169,6 +169,10 @@ class sqlman(object):
 		else:
 			return "Can not look up disk info without an id or a machine directory pair. Please specify one of these."
 
+	def diskUsage(self, disk_id):
+		"""returns the number of bytes stored on the disk in SampleFiles"""
+		return self.x("SELECT SUM(Filesize) FROM SampleFiles WHERE Disk_ID = %s" % str(disk_id))[0]
+
 	def updateSampleName(self, newSample, hadoopDirectory, filename):
 		"""Allows the user to update the sample name of a file."""
 		query = """UPDATE SampleFiles 

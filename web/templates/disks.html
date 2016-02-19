@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+tr.show_more {
+    cursor: pointer;
+}
+
+#more_info{
+  display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+  <!-- Example row of columns -->
+  <br />
+  <h2> Smartsubmit Files </h2>
+  <p> Below we have a list of every file in the smartsubmit system. Click on a sample name to get the list of the files in that sample.</p>
+  <div class="row">
+  <div class="col-lg-12">
+    <table class="table-striped" style="width: 100%">
+        <tr>
+          <td style="width: 30%"><strong>Machine</strong></td>
+          <td style="width: 30%"><strong>Directory</strong></td>
+          <td style="width: 20%"><strong>Usage</strong></td>
+          <td style="width: 20%"><strong>Free Space</strong></td>
+        </tr>
+      {% for d in disk_list %}
+          <tr class="show_more" id="tr_{{ s.name }}">
+            <td style="width: 30%">{{ d.machine }}</td>
+            <td style="width: 30%">{{ d.directory }}</td>
+            <td style="width: 20%"><script>document.write(getReadableFileSizeString({{ d.used }}))</script></td>
+            <td style="width: 20%"><script>document.write(getReadableFileSizeString({{ d.free }}))</script></td>
+          </tr>
+        {% endfor %}
+    </table>
+  </div>
+  </div>
+    <br>
+    <h3> Detailed Info </h3>
+    <p> Click above to show the files for a particular sample </p>
+    <hr>
+</div>
+<div class="container-fluid">
+  <div class="row">
+  <div class="col-lg-12">
+    <table class="table-striped" id="more_info" style="width: 100%; cellpadding: 20px">
+        <tr>
+          <td style="width: 10%"><strong>File Name</strong></td>
+          <td style="width: 10%"><strong>Size</strong></td>
+          <td style="width: 40%"><strong>Local Directory</strong></td>
+          <td style="width: 40%"><strong>Hadoop Directory</strong></td>
+        </tr>
+      <table>
+  </div>
+  </div>
+</div>
+
+  <script type="text/javascript">
+
+  function addRow(fname, ldir, hdir, size){
+    $('#more_info tr:last').after("<tr class='fileinfo'>\
+      <td style='width: 10%'>"+ fname +"</td>\
+      <td style='width: 10%'>"+ getReadableFileSizeString(size) +"</td>\
+      <td style='width: 40%'>"+ ldir +"</td>\
+      <td style='width: 40%'>"+ hdir +"</td>\
+      </tr>");
+  }
+
+
+  function fillDetails(rows) {
+    for (var i in rows) {
+      var fname = rows[i][0];
+      var ldir = rows[i][3]+":"+rows[i][1]; //Machine:Local Directory
+      var size = rows[i][4] //Machine:Local Directory
+      var hdir = rows[i][2]; //Hadoop Directory
+
+      addRow(fname, ldir, hdir, size);
+    }
+  }
+
+  function cleanTable(){
+    $("#more_info:not(:first)").remove()
+  }
+
+  $(".show_more").click(function(){
+    var sample_name = $(this).attr("id").substring(3);
+
+    $("#more_info tr:not(:first)").remove()
+
+    $.getJSON("/get_sample_files/"+sample_name+".json", function(data) {
+      fillDetails(data);
+    });
+    $("#more_info").show()
+  })
+
+  $(".sample_size").innerHTML=getReadableFileSizeString($(this).innerHTML)
+
+  </script>
+<div class="container">
+{% endblock %}
