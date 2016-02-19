@@ -117,7 +117,7 @@ def returnSampleFiles(sname):
 	rows = man.x("Select FileName, LocalDirectory, HadoopPath, Machine, FileSize From SampleFiles Where Sample=='%s'" % sname)
 	return Response(json_dump(rows), mimetype='application/json')
 
-@app.route("/get_sample_files/<disk_id>.json")
+@app.route("/get_disk_files/<disk_id>.json")
 def returnDiskFiles(disk_id):
 	rows = man.x("Select FileName, LocalDirectory, HadoopPath, Machine, FileSize From SampleFiles Where Disk_ID=%s" % disk_id)
 	return Response(json_dump(rows), mimetype='application/json')
