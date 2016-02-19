@@ -358,7 +358,13 @@ def dropSample(sample_name):
 		if not hdir[-1] == '/':
 			hdir+='/'
 		
-		deleteSampleFile(hdir+fname)
+		ret=deleteSampleFile(hdir+fname)
+
+		if ret==True:
+			print("File %s in %s removed from the system" % (fname, sample_name))
+		else:
+			print("There were some errors removing %s from in %s from the system. Output:\n%s" (fname, sample_name, ret))
+
 
 def getBestDisk(sample_name, fsize):
 	"""Generates a list of the possible locations for storing a sample file which is ordered by minimizing the following criteria (calling sample_name the "active sample"):	
@@ -474,6 +480,7 @@ def deleteSampleFile(hadoop_path_to_file, LAZY=False):
 	filename = os.path.basename(hadoop_path_to_file)
 
 	message=""
+	success=True
 
 	if not LAZY:
 		message += "Attempting to delete the file from the remote machine\n"
@@ -490,22 +497,24 @@ def deleteSampleFile(hadoop_path_to_file, LAZY=False):
 			exit_code = rm.returncode
 
 			if exit_code == 0:
-				message += "The file %s in sample '%s' was succesfully deleted from the remote directory \n" % (filename, sample)
 				logging.info("The file %s in sample '%s' was succesfully deleted from the remote directory" % (filename, sample))
 			else:
 				message += "There was an error removing %s in sample '%s'. rm failed with exit code %s \n" % (filename, sample, str(exit_code))
 				logging.error("There was an error removing %s in sample '%s'. rm failed with exit code %s" % (filename, sample, str(exit_code)))
+				success=False
 		else:
 			disk_info = man.diskInfo(disk_id=disk_id)
-			message += "Will not attempt to remove file %s in sample %s from %s:%s because it is tagged as not working. \n" % (filename, sample, disk_id["Machine"], disk_id["LocalDirectory"])
 			logging.info("Will not attempt to remove file %s in sample %s from %s:%s because it is tagged as not working." % (filename, sample, disk_id["Machine"], disk_id["LocalDirectory"]))
 		
 
-	man.removeSample(hadoop_dir, filename)
-
-	message += "The file %s was succesfully removed from the table" % filename
-
-	return message
+	sql_success = man.removeSample(hadoop_dir, filename) 
+	if sql_success and success:
+		return True
+	elif sql_success:
+		return message
+	else:
+		message+="There was an error removing the file from the database."
+		return message
 
 def checkDisk(dir, machine):
 	"""Attempts to read all files on a disk, returns true if the reads were succesful. If no files on disk, it writes and reads an empty file. Returns output of ssh on failure"""

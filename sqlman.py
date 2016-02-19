@@ -116,8 +116,10 @@ class sqlman(object):
 		try:
 			self.cursor.execute( "DELETE FROM SampleFiles WHERE HadoopPath='%s' AND FileName='%s'" % (hadoopDirectory, filename))
 			self.connection.commit()
+			return True
 		except sqlite3.OperationalError as err:
 			print("There was an error removing the row: %s" % err)
+			return False
 
 	def removeDisk(self, path, machine):
 		"""Removes the row from the Disks table corresponding to machine:path and commits the change to the file."""
