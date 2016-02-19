@@ -504,7 +504,7 @@ def deleteSampleFile(hadoop_path_to_file, LAZY=False):
 				success=False
 		else:
 			disk_info = man.diskInfo(disk_id=disk_id)
-			logging.info("Will not attempt to remove file %s in sample %s from %s:%s because it is tagged as not working." % (filename, sample, disk_id["Machine"], disk_id["LocalDirectory"]))
+			logging.info("Will not attempt to remove file %s in sample %s from %s:%s because it is tagged as not working." % (filename, sample, disk_info["Machine"], disk_info["LocalDirectory"]))
 		
 
 	sql_success = man.removeSample(hadoop_dir, filename) 
