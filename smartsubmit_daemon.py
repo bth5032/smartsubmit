@@ -215,8 +215,9 @@ def run_server():
 		3. delete file
 		4. run job
 		5. list sample files
-		6. report bad disk
-		7. check job""" % command.command)
+		6. list disks
+		7. check job
+		8. update file sample""" % command.command)
 
 		print(command)
 
