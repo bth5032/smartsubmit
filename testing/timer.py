@@ -12,20 +12,32 @@ def getLines():
 	lines = filter(lambda x: "bhashemi" in x, lines)
 	return lines
 
+def getJobInfoFromHistory(jid):
+	"""Gets the time of completion, the start time, and the time submitted from condor_history"""
+	cq = sp.Popen(["condor_history", jid], stdout=sp.PIPE)
+	output = cq.communicate()[0]
+	lines = output.split('\n')
+	#get only lines with bhashemi, same as a grep call
+	lines = filter(lambda x: "bhashemi" in x, lines)
+	if len(lines) == 1:
+		info=lines.split()
+		return({"runtime": info[4], "start": info[2]+' '+info[3], "end": info[6]+' '+info[7], "status": info[5]})
+	else:
+		print("There was an error parsing condor_history for Job ID: %s" % jid)
+		return None
+
+
 start=time.time()
-first_started = 0
+first_started = None
 ## Set up dictionaries and lists with all the processes.
 lines = getLines()
 procs = {}
-last_procs_active = []
 
 for line in lines:
 	line=line.split()
-	last_procs_active.append(line[0])
-	procs[line[0]] = {"run_time":0,"start_time":0,"end_time":0,"elapsed_time":0}
+	procs[line[0]] = {"run_time":None,"start_time":None,"end_time":None,"elapsed_time":None}
 
 
-this_procs_active = []
 while lines:
 	this_procs_active = []
 	for line in lines:
