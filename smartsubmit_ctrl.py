@@ -136,15 +136,17 @@ def condorSubmit(job_info, sample, log_dir):
 
 	condor_submit_command = "condor_submit condor_submit.tmp"
 
-	condor_submit = subprocess.Popen(condor_submit_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	condor_submit = subprocess.Popen([condor_submit_command,"-terse"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	condor_submit.wait()
 
 	exit_code = condor_submit.returncode
 
+
 	if not exit_code == 0:
 		print(condor_submit.communicate()[1])
 	else:
-		print("Job Queued")
+		clusterID = condor_submit.communicate()[0].split()[0]
+		print(clusterID)
 
 def sendCommand(command_obj):
 	# Set up connection
