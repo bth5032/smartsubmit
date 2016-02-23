@@ -136,7 +136,7 @@ def condorSubmit(job_info, sample, log_dir):
 
 	condor_submit_command = "condor_submit"
 
-	condor_submit = subprocess.Popen([condor_submit_command,"condor_submit.tmp","-terse"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	condor_submit = subprocess.Popen([condor_submit_command,"-terse","condor_submit.tmp"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	condor_submit.wait()
 
 	exit_code = condor_submit.returncode
