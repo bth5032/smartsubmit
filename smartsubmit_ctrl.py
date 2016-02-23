@@ -134,9 +134,9 @@ def condorSubmit(job_info, sample, log_dir):
 		print("There was an error creating the submit file from the template? sed quit with error code %s. Will not attempt to submit job for %s" % (str(exit_code), space_seperated_list_of_files))
 		return exit_code
 
-	condor_submit_command = "condor_submit condor_submit.tmp"
+	condor_submit_command = "condor_submit"
 
-	condor_submit = subprocess.Popen([condor_submit_command,"-terse"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	condor_submit = subprocess.Popen([condor_submit_command,"condor_submit.tmp","-terse"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	condor_submit.wait()
 
 	exit_code = condor_submit.returncode
