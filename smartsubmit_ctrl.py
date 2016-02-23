@@ -146,7 +146,7 @@ def condorSubmit(job_info, sample, log_dir):
 		print(condor_submit.communicate()[1])
 	else:
 		output=condor_submit.communicate()[0]
-		clusterID = out.split()
+		clusterID = output.split()
 		print(output)
 		print(clusterID)
 
