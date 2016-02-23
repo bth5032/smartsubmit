@@ -145,7 +145,9 @@ def condorSubmit(job_info, sample, log_dir):
 	if not exit_code == 0:
 		print(condor_submit.communicate()[1])
 	else:
-		clusterID = condor_submit.communicate()[0].split()[0]
+		output=condor_submit.communicate()[0]
+		clusterID = out.split()
+		print(output)
 		print(clusterID)
 
 def sendCommand(command_obj):
