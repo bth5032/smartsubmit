@@ -136,7 +136,7 @@ def condorSubmit(job_info, sample, log_dir):
 
 	condor_submit_command = "condor_submit"
 
-	condor_submit = subprocess.Popen([condor_submit_command,"-terse","condor_submit.tmp"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	condor_submit = subprocess.Popen([condor_submit_command,"-terse","condor_submit.tmp"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	condor_submit.wait()
 
 	exit_code = condor_submit.returncode
@@ -145,9 +145,7 @@ def condorSubmit(job_info, sample, log_dir):
 	if not exit_code == 0:
 		print(condor_submit.communicate()[1])
 	else:
-		output=condor_submit.communicate()[0]
-		clusterID = output.split()
-		print(output)
+		clusterID = condor_submit.communicate()[0].split()[0]
 		print(clusterID)
 
 def sendCommand(command_obj):
