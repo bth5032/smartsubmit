@@ -37,12 +37,13 @@ tr.show_more {
     <table class="table-striped table-fixed" style="width: 100%">
         <thead>
         <tr>
-          <th class="col-xs-4"><strong>Machine</strong></td>
-          <th class="col-xs-4"><strong>Directory</strong></td>
-          <th class="col-xs-2"><strong>Usage</strong></td>
-          <th class="col-xs-2"><strong>Free Space</strong></td>
+          <th class="col-xs-4"><strong>Machine</strong></th>
+          <th class="col-xs-4"><strong>Directory</strong></th>
+          <th class="col-xs-2"><strong>Usage</strong></th>
+          <th class="col-xs-2"><strong>Free Space</strong></th>
         </tr>
         </thead>
+        <tbody>
       {% for d in disk_list %}
           <tr class="show_more" id="tr_{{ d.id }}">
             <td class="col-xs-4">{{ d.machine }}</td>
@@ -51,6 +52,7 @@ tr.show_more {
             <td class="col-xs-2"><script>document.write(getReadableFileSizeString({{ d.free }}))</script></td>
           </tr>
         {% endfor %}
+        </tbody>
     </table>
   </div>
     <br>
