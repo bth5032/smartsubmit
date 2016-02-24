@@ -134,17 +134,19 @@ def condorSubmit(job_info, sample, log_dir):
 		print("There was an error creating the submit file from the template? sed quit with error code %s. Will not attempt to submit job for %s" % (str(exit_code), space_seperated_list_of_files))
 		return exit_code
 
-	condor_submit_command = "condor_submit condor_submit.tmp"
+	condor_submit_command = "condor_submit"
 
-	condor_submit = subprocess.Popen(condor_submit_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+	condor_submit = subprocess.Popen([condor_submit_command,"-terse","condor_submit.tmp"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	condor_submit.wait()
 
 	exit_code = condor_submit.returncode
 
+
 	if not exit_code == 0:
 		print(condor_submit.communicate()[1])
 	else:
-		print("Job Queued")
+		clusterID = condor_submit.communicate()[0].split()[0]
+		print(clusterID)
 
 def sendCommand(command_obj):
 	# Set up connection
