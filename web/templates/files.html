@@ -62,10 +62,10 @@ tr.show_more {
     <table class="table-striped table-fixed" id="more_info" style="width: 100%; cellpadding: 20px">
         <thead>
         <tr>
-          <th style="width: 10%"><strong>File Name</strong></td>
-          <th style="width: 10%"><strong>Size</strong></td>
-          <th style="width: 40%"><strong>Local Directory</strong></td>
-          <th style="width: 40%"><strong>Hadoop Directory</strong></td>
+          <th class="col-xs-2"><strong>File Name</strong></td>
+          <th class="col-xs-2"><strong>Size</strong></td>
+          <th class="col-xs-4"><strong>Local Directory</strong></td>
+          <th class="col-xs-4"><strong>Hadoop Directory</strong></td>
         </tr>
       </thead>
       <table>
@@ -77,10 +77,10 @@ tr.show_more {
 
   function addRow(fname, ldir, hdir, size){
     $('#more_info tr:last').after("<tr class='fileinfo'>\
-      <td style='width: 10%'>"+ fname +"</td>\
-      <td style='width: 10%'>"+ getReadableFileSizeString(size) +"</td>\
-      <td style='width: 40%'>"+ ldir +"</td>\
-      <td style='width: 40%'>"+ hdir +"</td>\
+      <td class='col-xs-2'>"+ fname +"</td>\
+      <td class='col-xs-2'>"+ getReadableFileSizeString(size) +"</td>\
+      <td class='col-xs-4'>"+ ldir +"</td>\
+      <td class='col-xs-4'>"+ hdir +"</td>\
       </tr>");
   }
 
