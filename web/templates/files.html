@@ -56,7 +56,7 @@ tr.show_more {
   <div class="row">
     <table class="table-striped table-fixed" id="more_info" style="width: 100%; display: none">
         <thead>
-        <tr>
+        <tr class="row">
           <th class="col-lg-2"><strong>File Name</strong></th>
           <th class="col-lg-1"><strong>Size</strong></th>
           <th class="col-lg-4"><strong>Local Directory</strong></th>
@@ -73,7 +73,7 @@ tr.show_more {
   <script type="text/javascript">
 
   function addRow(fname, ldir, hdir, size){
-    $('#more_info tr:last').after("<tr>\
+    $('#more_info tr:last').after("<tr class='row'>\
       <td class='col-lg-2'>"+ fname +"</td>\
       <td class='col-lg-1'>"+ getReadableFileSizeString(size) +"</td>\
       <td class='col-lg-4'>"+ ldir +"</td>\
