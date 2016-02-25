@@ -11,11 +11,13 @@ tr.show_more {
 }
 
 .table-fixed thead {
-  width: 97%;
+  width: 100%;
+  word-wrap: break-word;
 }
 .table-fixed tbody {
   height: 230px;
   overflow-y: auto;
+  word-wrap: break-word;
   width: 100%;
 }
 .table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
@@ -45,7 +47,7 @@ tr.show_more {
         </thead>
         <tbody>
       {% for d in disk_list %}
-          <tr class="show_more" id="tr_{{ d.id }}">
+          <tr class="show_more row" id="tr_{{ d.id }}">
             <td class="col-xs-4">{{ d.machine }}</td>
             <td class="col-xs-4">{{ d.directory }}</td>
             <td class="col-xs-2"><script>document.write(getReadableFileSizeString({{ d.used }}))</script></td>
