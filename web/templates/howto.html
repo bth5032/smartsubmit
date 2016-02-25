@@ -1,16 +1,104 @@
 {% extends "base.html" %}
 
+{% block head %}
+<style>
+#manual {
+  font-family: medium-content-serif-font,Georgia,Cambria,"Times New Roman",Times,serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 21px;
+  line-height: 1.58;
+  letter-spacing: -.003em;
+  -webkit-font-smoothing: antialiased;
+  color: rgba(0,0,0,.8);
+}
+
+p {
+  margin-top: 25px;
+}
+
+a.anchor {
+    display: block;
+    position: relative;
+    top: -55px;
+    visibility: hidden;
+}
+
+h2 {
+  margin-top: 40px;
+}
+
+</style>
+{% endblock %}
+
 {% block content %}
-  <!-- Example row of columns -->
   <div class="row">
-      <h2>How To Use Smartsubmit</h2>
-      <p>What Is Smartsubmit?</p>
-      <p>What Do You Need?</p>
-      <p>Loading Files</p>
-      <p>The Condor Configuration Template</p>
-      <p>Running Over Samples</p>
-      <p>A Basic Example: Word Counting</p>
-      <p>Tips</p>
+    <div id="manual" class="col-md-9" role="main">
+
+      <a class="anchor" id="WhatIs"></a><h2>What is Smartsubmit?</h2>
+      <hr style="width: 70%">    
+      <p>
+        Smartsubmit is a tool that helps manage accelerated access to the TAS computing cluster for I/O intensive computation, e.g. babymaking. Files are loaded into the system from Hadoop and classes into "samples." When a user wants to run an executable over the files in a sample, Smartsubmit computes and submits condor jobs which are guarenteed to land on a machine hosting a local copy of the file. The jobs submitted by Smartsubmit will call the specified executable with a space seperated list of files on that machine as arguments.  
+      </p>
+      
+      <a class="anchor" id="HowTo"></a><h2>How To Use Smartsubmit</h2>
+      <hr style="width: 70%">
+      <p> If you want to use Smartsubmit, that means you have some executable program that you would like to run over a dataset that is loaded into the system. First, check the <a href="/files">files</a> page to be sure that the sample is loaded in. If not, you'll need contact Bobak or FKW and ask them to load in the file for you.</p>
+
+
+      <p>Now that we are sure the sample is there, we only need two more things:</p>
+
+      <ol>
+        <li>A clean working directory on a UAF (or another machine that can submit to the grid). This will hold all the output and files created by your job.</li>
+        <li>An executable that takes in a space seperated list of ntuple files and runs your code on them. This executable could be a proxy to your root code, a few examples will be given below. </li>
+      </ol>
+
+      <p>Let's run through a typical usage case, suppose the sample you'd like to run over is called 'test', and the executable you'd like to run has the following network location: '/nfs-7/t2tas/executable'.</p>
+      <pre><code>mkdir ss_output 
+ss_ctrl --run_job -e /nfs-7/t2tas/executable -s test -l ss_output</code></pre>
+      
+      <p>That's it, ss_ctrl should output a list of the condor cluster IDs for the jobs just submitted. One job will be made for each disk that holds files in the sample you've selected.</p>
+      
+      <pre>here is some code with just pre</pre>
+
+      Some more text in between
+
+      <code>here is some code with just code</code>
+
+      Finally even more text
+
+      <p> Here is some regular text to accompany that code <br>
+
+        This would be another line
+        
+        and this even another.</p>
+
+      <a class="anchor" id="Condor"></a><h2>The Condor Configuration Template</h2>
+      <hr style="width: 70%">
+      <a class="anchor" id="Jobs"></a><h2>Running Jobs Over Samples</h2>
+      <hr style="width: 70%">
+      <a class="anchor" id="wc"></a><h2>A Basic Example: Word Counting</h2>
+      <hr style="width: 70%">
+      <a class="anchor" id="stopbabies"></a><h2>A More Interesting Example: StopBabies</h2>
+      <hr style="width: 70%">
+      <a class="anchor" id="tips"></a><h2>Tips</h2>
+      <hr style="width: 70%">
+    </div>
+
+    <div class="col-md-3" role="complementary"> 
+      <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix"> 
+        <h4>Contents</h4>
+        <ul class="nav bs-docs-sidenav"> 
+          <li class=""><a href="#WhatIs">What Is Smartsubmit?</a></li> 
+          <li class=""><a href="#HowTo">How To Use Smartsubmit</a></li>
+          <li class=""><a href="#Condor">The Condor Configuration Template</a></li> 
+          <li class=""><a href="#Jobs">Running Jobs Over Samples</a></li> 
+          <li class=""><a href="#wc">A Basic Example: Word Counting</a></li> 
+          <li class=""><a href="#stopbabies">A More Interesting Example: StopBabies</a></li> 
+          <li class=""><a href="#tips">Tips</a></li> 
+        </ul>
+      </nav>
+    </div>
  </div>
       
 {% endblock %}
