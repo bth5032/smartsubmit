@@ -100,7 +100,7 @@ tr.show_more {
   $(".show_more").click(function(){
     var sample_name = $(this).attr("id").substring(3);
 
-    $("#more_info tr:not(:first)").remove()
+    $("#more_info tr:not(:lt(2))").remove()
 
     $.getJSON("/get_sample_files/"+sample_name+".json", function(data) {
       fillDetails(data);
