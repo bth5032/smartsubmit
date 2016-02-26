@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import subprocess as sp
-import time, datetime
+import time, datetime, sys
 
 
 def getLines():
@@ -12,9 +12,13 @@ def getLines():
 	lines = filter(lambda x: "bhashemi" in x, lines)
 	return lines
 
-def getProcs():
-	"""Reads the condor_q and returns all the processes which are marked as Idle for user bhashemi."""
-	
+def getClusterIds():
+	"""Reads the standard input which should be filled with all the cluster ids for the jobs just submitted."""
+	ids[]
+	for line in sys.stdin:
+		ids.append(line[:-1])
+	return ids
+
 def getJobInfoFromHistory(jid):
 	"""Gets the time of completion, the start time, and the time submitted from condor_history"""
 	cq = sp.Popen(["condor_history", jid], stdout=sp.PIPE)
@@ -41,8 +45,7 @@ def getStdoutFilename(jid):
 def getInfoFromStdout(filename):
 	"""Reads in data from the standard output of the jobs and parses out relevant information"""
 	f = open(filename)
-	for line in f:
-		print(line)
+	
 
 def running():
 	"""Returns whether any condor jobs exist for bhashemi"""
@@ -68,22 +71,32 @@ def wait():
 def main():
 	"""Main function. Gets start time and waits for all the jobs in the condor_q to be completed. Then it reads timing information for each job from both the condor logs and the standard output of the condor executable script."""
 	start=time.time()
-	first_started = None
-	procs = getProcs()
-	
-	wait()
-	fillJobData(procs)
-	get
-	########################################
-	#Print it all out
-	print("""Start:	%s
-End:	%s
-Delta:	%s"""
 
-	printJobData(procs)
-	########################################
+	#### Set up procs dictionary
+	ids = getClusterIds()
+	procs = dict.fromkeys(ids)
 
-	
+	wait() # wait for jobs to end
+	fillJobData(procs) #extract data into the procs dict from condor_history, the stdout file, 
+
+	########################################
+	# Print it all out #####################
+
+	net_time = datetime.timedelta(seconds=(end-start))
+	print("""Start:\t%s
+End:\t%s
+Net Time:\t%s
+Last Job:\t%s
+Last File:\t%s
+================
+JID\tStart\tRoot Start\tRoot End\tJob End\tFile Write
+================""" % (start, end, net_time, last_job, last_file)
+
+	for jid in procs:
+		print("%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["end"], procs[jid]["file"]))
+
+	########################################
+	########################################
 
 if (__name__ == "__main__"):
 	main()
