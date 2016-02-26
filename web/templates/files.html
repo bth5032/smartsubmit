@@ -6,8 +6,22 @@ tr.show_more {
     cursor: pointer;
 }
 
-#more_info{
-  display: none;
+.table-fixed thead {
+  width: 100%;
+  word-wrap: break-word;
+}
+.table-fixed tbody {
+  height: 500px;
+  overflow-y: auto;
+  word-wrap: break-word;
+  width: 100%;
+}
+.table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
+  display: block;
+}
+.table-fixed tbody td, .table-fixed thead > tr> th {
+  float: left;
+  border-bottom-width: 0;
 }
 </style>
 {% endblock %}
@@ -43,14 +57,19 @@ tr.show_more {
 <div class="container-fluid">
   <div class="row">
   <div class="col-lg-12">
-    <table class="table-striped" id="more_info" style="width: 100%; cellpadding: 20px">
-        <tr>
-          <td style="width: 10%"><strong>File Name</strong></td>
-          <td style="width: 10%"><strong>Size</strong></td>
-          <td style="width: 40%"><strong>Local Directory</strong></td>
-          <td style="width: 40%"><strong>Hadoop Directory</strong></td>
+    <table class="table-striped table-fixed" id="more_info" style="width: 100%; display: none">
+        <thead>
+        <tr class="row">
+          <th class="col-xs-2"><strong>File Name</strong></th>
+          <th class="col-xs-1"><strong>Size</strong></th>
+          <th class="col-xs-4"><strong>Local Directory</strong></th>
+          <th class="col-xs-5"><strong>Hadoop Directory</strong></th>
         </tr>
-      <table>
+      </thead>
+      <tbody>
+        <tr style="display: none"></tr>
+      </tbody>
+      </table>
   </div>
   </div>
 </div>
@@ -58,11 +77,11 @@ tr.show_more {
   <script type="text/javascript">
 
   function addRow(fname, ldir, hdir, size){
-    $('#more_info tr:last').after("<tr class='fileinfo'>\
-      <td style='width: 10%'>"+ fname +"</td>\
-      <td style='width: 10%'>"+ getReadableFileSizeString(size) +"</td>\
-      <td style='width: 40%'>"+ ldir +"</td>\
-      <td style='width: 40%'>"+ hdir +"</td>\
+    $('#more_info tr:last').after("<tr class='row'>\
+      <td class='col-xs-2'>"+ fname +"</td>\
+      <td class='col-xs-1'>"+ getReadableFileSizeString(size) +"</td>\
+      <td class='col-xs-4'>"+ ldir +"</td>\
+      <td class='col-xs-5'>"+ hdir +"</td>\
       </tr>");
   }
 
@@ -85,7 +104,7 @@ tr.show_more {
   $(".show_more").click(function(){
     var sample_name = $(this).attr("id").substring(3);
 
-    $("#more_info tr:not(:first)").remove()
+    $("#more_info tr:not(:lt(2))").remove()
 
     $.getJSON("/get_sample_files/"+sample_name+".json", function(data) {
       fillDetails(data);
