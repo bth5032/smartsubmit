@@ -75,6 +75,21 @@ ss_ctrl --run_job -e /nfs-7/t2tas/executable -s test -l ss_output</code></pre>
 
       <a class="anchor" id="Condor"></a><h2>The Condor Configuration Template</h2>
       <hr style="width: 70%">
+      <a class="anchor" id="output"></a><h2>What Do You Get Out?</h2>
+      <hr style="width: 70%">
+      Here we'll discuss what you get out of your job submitted by smartsubmit. Smartsubmit was made to be extensible enough for the user to make edits to the condor submit file, but we provide a defult configuration that should fit generic needs. 
+
+      When you specify an output directory with the <code>-l</code> flag, smartsubmit creates checks that directory exists and creates it otherwise. Inside that directory, smartsubmit looks for another called "sandbox." This sandbox directory will hold all of the files that your program has placed in the working directory tree on the worker node. Using condor's built in file transfer protocol (explained in more detail <a href="http://research.cs.wisc.edu/htcondor/manual/v7.6/2_5Submitting_Job.html#sec:file-transfer">here</a>), allows us to return files from the remote working directory. The lines in the default condorFileTemplate that correspond to this action are:
+
+      <pre>
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+output_destination = $$__LOG_DIR__$$/$$__SAMPLE__$$/sandbox/
+Transfer_output_files = .
+      </pre>
+
+      The <code>should_transfer_files</code> option is a master flag that lets condor know to use it's file transfer protocol. <code>when_to_transfer_output = ON_EXIT</code> tells condor to wait until the executable had returned before transfering output files. <code>Transfer_output_files = .</code> tells condor to transfer the working directory and everythin inside of it recursively into the specificed <code>output_destination</code>.
+      
       <a class="anchor" id="Jobs"></a><h2>Running Jobs Over Samples</h2>
       <hr style="width: 70%">
       <a class="anchor" id="wc"></a><h2>A Basic Example: Word Counting</h2>
@@ -92,6 +107,7 @@ ss_ctrl --run_job -e /nfs-7/t2tas/executable -s test -l ss_output</code></pre>
           <li class=""><a href="#WhatIs">What Is Smartsubmit?</a></li> 
           <li class=""><a href="#HowTo">How To Use Smartsubmit</a></li>
           <li class=""><a href="#Condor">The Condor Configuration Template</a></li> 
+          <li class=""><a href="#output">What Do You Get Out?</a></li> 
           <li class=""><a href="#Jobs">Running Jobs Over Samples</a></li> 
           <li class=""><a href="#wc">A Basic Example: Word Counting</a></li> 
           <li class=""><a href="#stopbabies">A More Interesting Example: StopBabies</a></li> 
