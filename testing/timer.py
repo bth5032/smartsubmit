@@ -28,9 +28,9 @@ def getFilenames(jid):
 
 	for l in lines:
 		if l[:6] == "Out = ":
-			out = l.split('"')
+			out = l.split('"')[1]
 		elif l[:6] == "Err = ":
-			err = l.split('"')
+			err = l.split('"')[1]
 		elif l[:20] == "TransferOutputRemaps":
 			outfile=l.split('"')[1].split('=')[1]
 
