@@ -27,6 +27,8 @@ def getStdoutFilename(jid):
 
 
 	x = filter(lambda y: y[:6] == "Out = " or y[:6] == "Err = ", lines) 
+	
+	#return (stdout, stderr, return_file)
 	if x[0][:6] == "Out = ":
 		return (x[0][7:-1], x[1][7:-1])
 	else:

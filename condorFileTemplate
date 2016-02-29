@@ -1,18 +1,20 @@
 universe=grid
 Grid_Resource=condor osg-gw-4.t2.ucsd.edu osg-gw-4.t2.ucsd.edu:9619
 +DESIRED_Sites="T2_US_UCSD"
-Transfer_Output_Files = /dev/null
+
 Output = $$__LOG_DIR__$$/$$__SAMPLE__$$/condorLog_$$__MACHINE__$$_$$__DISK__$$.stdout
 Error = $$__LOG_DIR__$$/$$__SAMPLE__$$/condorLog_$$__MACHINE__$$_$$__DISK__$$.stderr
 Log = $$__LOG_DIR__$$/$$__SAMPLE__$$/condorLog_$$__MACHINE__$$_$$__DISK__$$.log
-+Owner = undefined
+
 
 notify_user = bthashemi@ucsd.edu
 x509userproxy = /tmp/x509up_u31589
 
 Executable = $$__EXECUTABLE__$$
-Transfer_executable = False
 arguments = $$__PATH_TO_SAMPLE__$$
+
+Transfer_output_files = smartsubmit.root
+transfer_output_remaps = "smartsubmit.root=$$__LOG_DIR__$$/$$__SAMPLE__$$/sandbox/$$__MACHINE__$$_$$__DISK__$$.root"
 
 +RequiredUCSDHostname = "$$__MACHINE__$$"
 +IOSlot = True

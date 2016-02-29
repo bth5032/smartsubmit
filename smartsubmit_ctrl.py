@@ -15,6 +15,8 @@ def makeDirs(list_of_samples, parent_dir):
 		for sample in list_of_samples:
 			if not os.path.isdir("%s/%s" % (parent_dir, sample)):
 				os.mkdir("%s/%s" % (parent_dir, sample))
+			if not os.path.isdir("%s/%s/sandbox" % (parent_dir, sample)):
+				os.mkdir("%s/%s/sandbox" % (parent_dir, sample))
 		return True
 	except Exception as err:
 		print(err)
