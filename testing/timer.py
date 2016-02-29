@@ -44,7 +44,7 @@ def getFileTime(path):
 				return stats.st_mtime
 
 def stdoutInfo(stdout, stderr):
-	time_start, time_end, root_start, root_end, root_real, root_user, root_sys = ""
+	time_start = time_end = root_start = root_end = root_real = root_user = root_sys = ""
 
 	with open(stdout) as f:
 		for line in f:
