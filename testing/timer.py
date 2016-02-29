@@ -76,13 +76,10 @@ def stdoutInfo(stdout, stderr):
 
 	with open(stderr) as f:
 		for line in f:
-			
-			if not line:
-				continue
-			
 			a=line.split()
-			
-			if a[0] == "real":
+			if len(a) < 1:
+				continue
+			elif a[0] == "real":
 				root_real = a[1]
 			elif a[0] == "user":
 				root_user = a[1]
