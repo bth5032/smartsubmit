@@ -134,7 +134,7 @@ Last Job:\t%s
 Last File:\t%s
 ================
 ID\tStart\tRoot Start\tRoot End\tRoot Real Time\tRoot Sys Time\tRoot User Time\tJob End\tFile Write
-================""" % (start_time, end_time, net_time, last_job, last_file)
+================""" % (start_time, end_time, net_time, last_job, last_file))
 
 	for jid in procs:
 		print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["root_real"], procs[jid]["root_sys"], procs[jid]["root_user"], procs[jid]["end"], procs[jid]["file"]))
