@@ -54,9 +54,11 @@ def getFileTime(path):
 def stdoutInfo(stdout, stderr):
 	time_start = time_end = root_start = root_end = root_real = root_user = root_sys = ""
 
+	print(stdout)
+
 	with open(stdout) as f:
 		for line in f:
-			if not line:
+			if not line.strip():
 				continue
 		
 			a = line.strip('\n').split(None, 1)
@@ -69,6 +71,8 @@ def stdoutInfo(stdout, stderr):
 				root_start = a[1]
 			elif a[0] == "ROOT_END:":
 				root_end = a[1]	
+
+	print(stderr)
 
 	with open(stderr) as f:
 		for line in f:
