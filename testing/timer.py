@@ -13,6 +13,7 @@ def getClusterIds():
 	ids = []
 	for line in sys.stdin:
 		if line:
+			print(line[:-1])
 			ids.append(line[:-1])
 	return ids
 
