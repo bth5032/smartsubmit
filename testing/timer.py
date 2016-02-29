@@ -12,7 +12,7 @@ def getClusterIds():
 	"""Reads the standard input which should be filled with all the cluster ids for the jobs just submitted."""
 	ids = []
 	for line in sys.stdin:
-		if line:
+		if line.strip():
 			print(line[:-1])
 			ids.append(line[:-1])
 	return ids
