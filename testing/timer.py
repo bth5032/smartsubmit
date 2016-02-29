@@ -115,6 +115,7 @@ def main(start_time, procs):
 start_time is the time the script started. procs is an empty dictionary with condor cluster_ids for keys."""
 
 	wait(procs.keys()) # (1)
+	end_time = time.time()
 
 	for jid in procs:
 		procs[jid]= dict(zip(("stdout", "stderr", "outfile"), getFilenames(jid))) # (2)
@@ -127,7 +128,6 @@ start_time is the time the script started. procs is an empty dictionary with con
 
 	print(procs)
 
-	end_time = time.time()
 	net_time = datetime.timedelta(seconds=(end_time-start_time))
 
 	last_job = last_file = 0
@@ -148,7 +148,7 @@ ID\tStart\tRoot Start\tRoot End\tRoot Real Time\tRoot Sys Time\tRoot User Time\t
 ================""" % (start_time, end_time, net_time, last_job, last_file))
 
 	for jid in procs:
-		print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["root_real"], procs[jid]["root_sys"], procs[jid]["root_user"], hrt(procs[jid]["end"]), hrt(procs[jid]["file"])))
+		print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["root_real"], procs[jid]["root_sys"], procs[jid]["root_user"], hrt(procs[jid]["time_end"]), hrt(procs[jid]["file"])))
 
 	########################################
 	########################################
