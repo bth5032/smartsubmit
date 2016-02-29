@@ -64,12 +64,13 @@ def stdoutInfo(stdout, stderr):
 
 	with open(stderr) as f:
 		for line in f:
+			
 			if not line:
-				pass
-
+				continue
+			
 			a=line.split()
-
-			elif a[0] == "real":
+			
+			if a[0] == "real":
 				root_real = a[1]
 			elif a[0] == "user":
 				root_user = a[1]
