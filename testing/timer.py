@@ -32,6 +32,12 @@ def getFilenames(jid):
 		elif l[:20] == "TransferOutputRemaps":
 			outfile=l.split('"')[1].split('=')[1]
 
+	if not out:
+		print("issue with stdout: %s" % jid)
+	if not err:
+		print("issue with stderr: %s" % jid)
+	if not outfile:
+		print("issue with outfile: %s" % jid)
 	return (out, err, outfile)	
 
 def getFileTime(path):
