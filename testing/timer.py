@@ -89,18 +89,18 @@ def stdoutInfo(stdout, stderr):
 
 	return (time_start, root_start, root_end, time_end, root_real, root_user, root_sys)
 
-def running():
+def running(JIDs):
 	"""Returns whether any condor jobs exist for bhashemi"""
 	cq = sp.Popen("condor_q", stdout=sp.PIPE)
 	output = cq.communicate()[0]
 	lines = output.split('\n')
 	#get only lines with bhashemi, same as a grep call
-	lines = filter(lambda x: "bhashemi" in x, lines)
+	lines = filter(lambda x: any(jid in x for jid in JIDs), lines)
 	return bool(lines)
 
-def wait():
+def wait(JIDs):
 	"""keeps running until all jobs are finished"""
-	while running():
+	while running(JIDs):
 		time.sleep(300)
 
 def main(start_time, procs):
@@ -114,7 +114,7 @@ def main(start_time, procs):
 
 start_time is the time the script started. procs is an empty dictionary with condor cluster_ids for keys."""
 
-	wait() # (1)
+	wait(procs.keys()) # (1)
 
 	for jid in procs:
 		procs[jid]= dict(zip(("stdout", "stderr", "outfile"), getFilenames(jid))) # (2)
@@ -125,8 +125,10 @@ start_time is the time the script started. procs is an empty dictionary with con
 	########################################
 	# Print it all out #####################
 
+	print(procs)
+
 	end_time = time.time()
-	net_time = datetime.timedelta(seconds=(end-start_time))
+	net_time = datetime.timedelta(seconds=(end_time-start_time))
 
 	last_job = last_file = 0
 
