@@ -91,7 +91,7 @@ def running():
 
 def wait():
 	"""keeps running until all jobs are finished"""
-	while running()
+	while running():
 		time.sleep(300)
 
 def main(start_time, procs):
