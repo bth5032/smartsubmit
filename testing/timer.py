@@ -10,7 +10,7 @@ def hrt(unix_time):
 
 def getClusterIds():
 	"""Reads the standard input which should be filled with all the cluster ids for the jobs just submitted."""
-	ids[]
+	ids = []
 	for line in sys.stdin:
 		ids.append(line[:-1])
 	return ids
