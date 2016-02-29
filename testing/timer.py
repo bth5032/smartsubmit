@@ -109,7 +109,7 @@ start_time is the time the script started. procs is an empty dictionary with con
 
 	for jid in procs:
 		procs[jid]= dict(zip(("stdout", "stderr", "outfile"), getFilenames(jid))) # (2)
-		procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["time_end"], procs[jid]["root_real"], procs[jid]["root_user"], procs[jid]["root_sys"]  = stdoutInfo(procs[jid]["stdout"]) # (3)
+		procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["time_end"], procs[jid]["root_real"], procs[jid]["root_user"], procs[jid]["root_sys"]  = stdoutInfo(procs[jid]["stdout"], procs[jid]["stderr"]) # (3)
 		procs[jid]["file_time"] = getFileTime(procs[jid]["outfile"])
 		procs[jid]["file_time_hr"] = hrt(procs[jid]["file_time"])
 
