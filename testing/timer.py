@@ -124,7 +124,7 @@ start_time is the time the script started. procs is an empty dictionary with con
 	for jid in procs:
 		if procs[jid]["file_time"] > last_file:
 			last_file = procs[jid]["file_time"]
-		if procs[jid]["time_end"] > last_job
+		if procs[jid]["time_end"] > last_job:
 			last_job = procs[jid]["time_end"]
 
 	print("""Start:\t%s
