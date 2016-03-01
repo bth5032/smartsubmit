@@ -13,27 +13,23 @@ def getClusterIds():
 
 def getStdoutFilename(jid):
 	"""Reads the condor logs and returns a tuple of (stdout, stderr) the locations of the std output and std error files for the job with the specified job id"""
+
+	stdout, stderr, outfile = ""
+
 	cq = sp.Popen(["condor_history","-l",jid], stdout=sp.PIPE)
 	output = cq.communicate()[0]
 	lines = output.split('\n')
-	#get only lines with "Out = ", same as a grep call
 
-	#######################
-	#######################
-	########### NEED TO ADD RETURN FILE FUNCTIONALITY
-	########### NEED TO ADD RETURN FILE FUNCTIONALITY
-	#######################
-	#######################
+	for l in lines:
+		if l[:6] == "Out = ":
+			stdout = l[6:]
+		elif l[:6] == "Err = ":
+			stderr=l[6:]
+		elif l[:20] == "TransferOutputRemaps":
+			outfile=l.split('"')[1].strip().split('=')[1]
 
+	return (stdout, stderr, outfile)
 
-	x = filter(lambda y: y[:6] == "Out = " or y[:6] == "Err = ", lines) 
-	
-	#return (stdout, stderr, return_file)
-	if x[0][:6] == "Out = ":
-		return (x[0][7:-1], x[1][7:-1])
-	else:
-		return (x[1][7:-1], x[0][7:-1])
-	
 def stdoutInfo(stdout, stderr):
 	time_start, time_end, root_start, root_end, root_real, root_user, root_sys = ""
 
@@ -98,7 +94,7 @@ start_time is the time the script started. procs is an empty dictionary with con
 	wait() # (1)
 
 	for jid in procs:
-		procs[jid]= dict(zip(("stdout", "stderr", "return_file"), getStdoutFilename(key))) # (2)
+		procs[jid]= dict(zip(("stdout", "stderr", "outfile"), getStdoutFilename(key))) # (2)
 		procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["time_end"], procs[jid]["root_real"], procs[jid]["root_user"], procs[jid]["root_sys"]  = stdoutInfo(procs[jid]["stdout"]) # (3)
 		procs[jid]["return_file"]
 
