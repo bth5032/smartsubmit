@@ -1,20 +1,27 @@
 #!/usr/bin/python
 
 import subprocess as sp
-import time, datetime, sys
+import time, datetime, sys, os
 
+
+def hrt(unix_time):
+	"""return human readable time"""
+	return datetime.datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d %H:%M:%S')
 
 def getClusterIds():
 	"""Reads the standard input which should be filled with all the cluster ids for the jobs just submitted."""
-	ids[]
+	ids = []
 	for line in sys.stdin:
-		ids.append(line[:-1])
+		if line.strip():
+			print(line[:-1])
+			ids.append(line[:-1])
 	return ids
 
-def getStdoutFilename(jid):
-	"""Reads the condor logs and returns a tuple of (stdout, stderr) the locations of the std output and std error files for the job with the specified job id"""
 
-	stdout, stderr, outfile = ""
+def getFilenames(jid):
+	"""Parses condor_history -l and returns a tuple of (stdout, stderr, outfile) the locations of the std output, std error, and returned files for the job with the specified job id"""
+	
+	out = err = outfile = ""
 
 	cq = sp.Popen(["condor_history","-l",jid], stdout=sp.PIPE)
 	output = cq.communicate()[0]
@@ -22,20 +29,37 @@ def getStdoutFilename(jid):
 
 	for l in lines:
 		if l[:6] == "Out = ":
-			stdout = l[6:]
+			out = l.split('"')[1]
 		elif l[:6] == "Err = ":
-			stderr=l[6:]
+			err = l.split('"')[1]
 		elif l[:20] == "TransferOutputRemaps":
-			outfile=l.split('"')[1].strip().split('=')[1]
+			outfile=l.split('"')[1].split('=')[1]
 
-	return (stdout, stderr, outfile)
+	if not out:
+		print("issue with stdout: %s" % jid)
+	if not err:
+		print("issue with stderr: %s" % jid)
+	if not outfile:
+		print("issue with outfile: %s" % jid)
+	return (out, err, outfile)	
+
+def getFileTime(path):
+	"""Takes a path to the file and blocks until the file is completely written, then returns the last modified time from stat"""
+	while True:
+		if os.path.exists(path):
+			stats = os.stat(path)
+			time.sleep(5)
+			if stats.st_mtime == os.stat(path).st_mtime:
+				return stats.st_mtime
 
 def stdoutInfo(stdout, stderr):
-	time_start, time_end, root_start, root_end, root_real, root_user, root_sys = ""
+	time_start = time_end = root_start = root_end = root_real = root_user = root_sys = ""
+
+	print(stdout)
 
 	with open(stdout) as f:
 		for line in f:
-			if not line:
+			if not line.strip():
 				continue
 		
 			a = line.strip('\n').split(None, 1)
@@ -49,13 +73,13 @@ def stdoutInfo(stdout, stderr):
 			elif a[0] == "ROOT_END:":
 				root_end = a[1]	
 
+	print(stderr)
+
 	with open(stderr) as f:
 		for line in f:
-			if not line:
-				pass
-
 			a=line.split()
-
+			if len(a) < 1:
+				continue
 			elif a[0] == "real":
 				root_real = a[1]
 			elif a[0] == "user":
@@ -66,18 +90,18 @@ def stdoutInfo(stdout, stderr):
 
 	return (time_start, root_start, root_end, time_end, root_real, root_user, root_sys)
 
-def running():
+def running(JIDs):
 	"""Returns whether any condor jobs exist for bhashemi"""
 	cq = sp.Popen("condor_q", stdout=sp.PIPE)
 	output = cq.communicate()[0]
 	lines = output.split('\n')
 	#get only lines with bhashemi, same as a grep call
-	lines = filter(lambda x: "bhashemi" in x, lines)
+	lines = filter(lambda x: any(jid in x for jid in JIDs), lines)
 	return bool(lines)
 
-def wait():
+def wait(JIDs):
 	"""keeps running until all jobs are finished"""
-	while running()
+	while running(JIDs):
 		time.sleep(300)
 
 def main(start_time, procs):
@@ -91,49 +115,44 @@ def main(start_time, procs):
 
 start_time is the time the script started. procs is an empty dictionary with condor cluster_ids for keys."""
 
-	wait() # (1)
+	wait(procs.keys()) # (1)
+	end_time = time.time()
 
 	for jid in procs:
-		procs[jid]= dict(zip(("stdout", "stderr", "outfile"), getStdoutFilename(key))) # (2)
-		procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["time_end"], procs[jid]["root_real"], procs[jid]["root_user"], procs[jid]["root_sys"]  = stdoutInfo(procs[jid]["stdout"]) # (3)
-		procs[jid]["return_file"]
+		procs[jid]= dict(zip(("stdout", "stderr", "outfile"), getFilenames(jid))) # (2)
+		procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["time_end"], procs[jid]["root_real"], procs[jid]["root_user"], procs[jid]["root_sys"]  = stdoutInfo(procs[jid]["stdout"], procs[jid]["stderr"]) # (3)
+		procs[jid]["file_time"] = getFileTime(procs[jid]["outfile"])
+		procs[jid]["file_time_hr"] = hrt(procs[jid]["file_time"])
 
 	########################################
 	# Print it all out #####################
 
-	net_time = datetime.timedelta(seconds=(end-start))
+	print(procs)
+
+	net_time = datetime.timedelta(seconds=(end_time-start_time))
+
+	last_job = last_file = 0
+
+	for jid in procs:
+		if procs[jid]["file_time"] > last_file:
+			last_file = procs[jid]["file_time"]
+		if procs[jid]["time_end"] > last_job:
+			last_job = procs[jid]["time_end"]
+
 	print("""Start:\t%s
 End:\t%s
 Net Time:\t%s
 Last Job:\t%s
 Last File:\t%s
 ================
-JID\tStart\tRoot Start\tRoot End\tJob End\tFile Write
-================""" % (start, end, net_time, last_job, last_file)
+ID\tStart\tRoot Start\tRoot End\tRoot Real Time\tRoot Sys Time\tRoot User Time\tJob End\tFile Write
+================""" % (start_time, end_time, net_time, last_job, last_file))
 
 	for jid in procs:
-		print("%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["end"], procs[jid]["file"]))
+		print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["root_real"], procs[jid]["root_sys"], procs[jid]["root_user"], procs[jid]["time_end"], procs[jid]["file_time_hr"]))
 
 	########################################
 	########################################
 
 if (__name__ == "__main__"):
 	main(time.time(), dict.fromkeys(getClusterIds()))
-
-
-
-def getJobInfoFromHistory(jid):
-	"""Gets the time of completion, the start time, and the time submitted from condor_history"""
-	cq = sp.Popen(["condor_history", jid], stdout=sp.PIPE)
-	output = cq.communicate()[0]
-	lines = output.split('\n')
-	#get only lines with bhashemi, same as a grep call
-	lines = filter(lambda x: "bhashemi" in x, lines)
-	if len(lines) == 1:
-		info=lines.split()
-		return({"runtime": info[4], "start": info[2]+' '+info[3], "end": info[6]+' '+info[7], "status": info[5]})
-	else:
-		print("There was an error parsing condor_history for Job ID: %s" % jid)
-		return None
-
-
