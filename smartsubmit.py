@@ -556,11 +556,11 @@ def checkDisk(dir, machine):
 
 def moveToWorkingDisk(machine, local_dir, filename, sample_id):
 	"""removes the file specified and then adds it to the table again"""
-	(sample, hadoop_dir, user) = man.x("SELECT Sample, HadoopPath, User FROM SampleFiles WHERE Sample_ID='%d'" % sample_id)
+	(sample, hadoop_dir) = man.x("SELECT Sample, HadoopPath FROM SampleFiles WHERE Sample_ID='%d'" % sample_id)
 
 	hdp_path = hadoop_dir+filename 
 	deleteSampleFile(hdp_path, "smartsubmit", LAZY=True)
-	absorbSampleFile(sample, hdp_path, user) 
+	absorbSampleFile(sample, hdp_path, "bhashemi") 
 
 def badDisk(dirname, machine):
 	"""Used to correct the database in the case of a bad disk"""
