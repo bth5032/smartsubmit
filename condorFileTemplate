@@ -1,5 +1,5 @@
 universe=grid
-Grid_Resource=condor osg-gw-4.t2.ucsd.edu osg-gw-4.t2.ucsd.edu:9619
+Grid_Resource=condor osg-gw-6.t2.ucsd.edu osg-gw-6.t2.ucsd.edu:9619
 +DESIRED_Sites="T2_US_UCSD"
 
 Output = $$__LOG_DIR__$$/$$__SAMPLE__$$/condorLog_$$__MACHINE__$$_$$__DISK__$$.stdout
