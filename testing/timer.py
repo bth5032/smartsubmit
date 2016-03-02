@@ -28,6 +28,7 @@ def getClusterIds():
 			ids.append(line[:-1])
 	return ids
 
+
 def getFilenames(jid):
 	"""Parses condor_history -l and returns a tuple of (stdout, stderr, outfile) the locations of the std output, std error, and returned files for the job with the specified job id"""
 	
