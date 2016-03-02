@@ -4,6 +4,17 @@ import subprocess as sp
 import time, datetime, sys, os
 
 
+def checkMachines(procs):
+	"""Checks the filenames of stdout against the machine the job landed on from uname in the jobs stdout. Returns a dictionary with (clusterID, stdoutfile) (key, value) pairs."""
+	
+	wrong_machines = {}
+	for jid in procs:
+		target=procs[jid]["stdout"].split("condorLog_")[1].split("_")[0]
+		if not target == procs[jid]["machine"]:
+			wrong_machines[jid] = procs[jid][stdout]
+	
+	return wrong_machines
+
 def hrt(unix_time):
 	"""return human readable time"""
 	return datetime.datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d %H:%M:%S')
@@ -52,7 +63,7 @@ def getFileTime(path):
 				return stats.st_mtime
 
 def stdoutInfo(stdout, stderr):
-	time_start = time_end = root_start = root_end = root_real = root_user = root_sys = ""
+	time_start = time_end = root_start = root_end = root_real = root_user = root_sys = machine = ""
 
 	print(stdout)
 
@@ -71,6 +82,8 @@ def stdoutInfo(stdout, stderr):
 				root_start = a[1]
 			elif a[0] == "ROOT_END:":
 				root_end = a[1]	
+			elif a[0] == "MACHINE:":
+				machine=a[1]
 
 	print(stderr)
 
@@ -87,7 +100,7 @@ def stdoutInfo(stdout, stderr):
 				root_sys = a[1]
 
 
-	return (time_start, root_start, root_end, time_end, root_real, root_user, root_sys)
+	return (time_start, root_start, root_end, time_end, root_real, root_user, root_sys, machine)
 
 def running(JIDs):
 	"""Returns whether any condor jobs exist for bhashemi"""
@@ -119,7 +132,7 @@ start_time is the time the script started. procs is an empty dictionary with con
 
 	for jid in procs:
 		procs[jid]= dict(zip(("stdout", "stderr", "outfile"), getFilenames(jid))) # (2)
-		procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["time_end"], procs[jid]["root_real"], procs[jid]["root_user"], procs[jid]["root_sys"]  = stdoutInfo(procs[jid]["stdout"], procs[jid]["stderr"]) # (3)
+		procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["time_end"], procs[jid]["root_real"], procs[jid]["root_user"], procs[jid]["root_sys"], procs[jid]["machine"]  = stdoutInfo(procs[jid]["stdout"], procs[jid]["stderr"]) # (3)
 		procs[jid]["file_time"] = getFileTime(procs[jid]["outfile"])
 		procs[jid]["file_time_hr"] = hrt(procs[jid]["file_time"])
 
@@ -149,6 +162,13 @@ ID\tStart\tRoot Start\tRoot End\tRoot Real Time\tRoot Sys Time\tRoot User Time\t
 
 	for jid in procs:
 		print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["root_real"], procs[jid]["root_sys"], procs[jid]["root_user"], procs[jid]["time_end"], procs[jid]["file_time_hr"]))
+
+	wrong_machines = checkMachines()
+
+	if wrong_machines:
+		print("\n===========================================\nThere were some jobs that did not land on the proper machines")
+		for jid in wrong_machines:
+			print("JID: %s\tstdout: %s" % (jid, wrong_machines[jid]))
 
 	########################################
 	########################################
