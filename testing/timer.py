@@ -163,12 +163,15 @@ ID\tStart\tRoot Start\tRoot End\tRoot Real Time\tRoot Sys Time\tRoot User Time\t
 	for jid in procs:
 		print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["root_real"], procs[jid]["root_sys"], procs[jid]["root_user"], procs[jid]["time_end"], procs[jid]["file_time_hr"]))
 
-	wrong_machines = checkMachines()
+	wrong_machines = checkMachines(procs)
 
 	if wrong_machines:
 		print("\n===========================================\nThere were some jobs that did not land on the proper machines")
 		for jid in wrong_machines:
 			print("JID: %s\tstdout: %s" % (jid, wrong_machines[jid]))
+
+	else:
+		print("\n===========================================\nEvery job landed on the proper machine.")
 
 	########################################
 	########################################

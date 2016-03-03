@@ -10,6 +10,7 @@ Log = $$__LOG_DIR__$$/$$__SAMPLE__$$/condorLog_$$__MACHINE__$$_$$__DISK__$$.log
 notify_user = bthashemi@ucsd.edu
 x509userproxy = /tmp/x509up_u31589
 
+transfer_executable = False
 Executable = $$__EXECUTABLE__$$
 arguments = $$__PATH_TO_SAMPLE__$$
 
