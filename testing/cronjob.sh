@@ -41,16 +41,16 @@ then
 		exit_code="$?"
 		ret=`echo "$ssh_output" | cut -d ' ' -f1`
 		lastcount=`sqlite3 filetest.db "SELECT WordCount FROM FileInfo WHERE HadoopPath='$hdloc'"`
+		sample=$(basename `dirname $location`)
+		filename=`basename $location`
 		if [[ ! "$exit_code" -eq 0 ]]
 		then
-			sample=$(basename `dirname $location`)
-			filename=`basename $location`
 			Errors="true"
 			#The file did not exist....
 			Message+="FILE ERROR ==> Sample: $sample \t File: $filename \t Machine: $machine \t Exit Code: $exit_code. \n HadoopPath: $hdloc \n======================\n"
 		elif [[ "$lastcount" == "$ret" ]]
 		then
-			echo "Counts Equal" >> $SS_CRON_OUTFILE
+			echo "Counts Equal \t Sample: $sample \t File: $filename" >> $SS_CRON_OUTFILE
 			sqlite3 filetest.db "UPDATE FileInfo SET LastCheckDate='$date' WHERE HadoopPath='$hdloc'"
 		elif [[ -z "$lastcount" ]]
 		then
