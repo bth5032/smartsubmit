@@ -17,7 +17,10 @@ def checkMachines(procs):
 
 def hrt(unix_time):
 	"""return human readable time"""
-	return datetime.datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d %H:%M:%S')
+	if unix_time:
+		return datetime.datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d %H:%M:%S')
+	else:
+		return "N/A"
 
 def getClusterIds():
 	"""Reads the standard input which should be filled with all the cluster ids for the jobs just submitted."""
@@ -55,12 +58,15 @@ def getFilenames(jid):
 
 def getFileTime(path):
 	"""Takes a path to the file and blocks until the file is completely written, then returns the last modified time from stat"""
-	while True:
-		if os.path.exists(path):
-			stats = os.stat(path)
-			time.sleep(5)
-			if stats.st_mtime == os.stat(path).st_mtime:
-				return stats.st_mtime
+	if not path:
+		return "N/A"
+	else:
+		while True:
+			if os.path.exists(path):
+				stats = os.stat(path)
+				time.sleep(5)
+				if stats.st_mtime == os.stat(path).st_mtime:
+					return stats.st_mtime
 
 def stdoutInfo(stdout, stderr):
 	time_start = time_end = root_start = root_end = root_real = root_user = root_sys = machine = ""
@@ -146,7 +152,7 @@ start_time is the time the script started. procs is an empty dictionary with con
 	last_job = last_file = 0
 
 	for jid in procs:
-		if procs[jid]["file_time"] > last_file:
+		if (procs[jid]["file_time"]) and (procs[jid]["file_time"] > last_file):
 			last_file = procs[jid]["file_time"]
 		if procs[jid]["time_end"] > last_job:
 			last_job = procs[jid]["time_end"]
