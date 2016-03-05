@@ -47,6 +47,7 @@ then
 		then
 			Errors="true"
 			#The file did not exist....
+			echo "Result: File Error with exit code $exit_code"
 			Message+="FILE ERROR ==> Sample: $sample \t File: $filename \t Machine: $machine \t Exit Code: $exit_code. \n HadoopPath: $hdloc \n======================\n"
 		elif [[ "$lastcount" == "$ret" ]]
 		then
@@ -54,11 +55,11 @@ then
 			sqlite3 filetest.db "UPDATE FileInfo SET LastCheckDate='$date' WHERE HadoopPath='$hdloc'"
 		elif [[ -z "$lastcount" ]]
 		then
-			echo "No last count, inserting" >> $SS_CRON_OUTFILE
+			echo "No last count, inserting \t Sample: $sample \t File: $filename" >> $SS_CRON_OUTFILE
 			sqlite3 filetest.db "INSERT INTO FileInfo(HadoopPath, WordCount, LastCheckDate) Values('$hdloc','$ret','$date')"
 		else
 			Errors="true"
-			echo "Counts don't agree" >> $SS_CRON_OUTFILE
+			echo "Counts don't agree Sample: $sample \t File: $filename" >> $SS_CRON_OUTFILE
 			LastCheckDate=`sqlite3 filetest.db "SELECT LastCheckDate FROM FileInfo WHERE HadoopPath='$hdloc'"`
 			echo "Last count $LastCountDate -- $lastcount" >> $SS_CRON_OUTFILE
 			echo "This count $ret" >> $SS_CRON_OUTFILE
