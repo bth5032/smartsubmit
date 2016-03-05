@@ -27,6 +27,7 @@ if [[ "$?" -eq 0 ]]
 then
 	date=`date`
 	echo "$date: Server is alive" >> $WEBLOG_FILE
+	sed -i '1d' $WEBLOG_FILE
 	#We have recieved the list of files from smartsubmit
 	for line in `echo $out | sed -e "s/\[//g" -e "s/',//g" -e "s/u'//g" -e "s/'//g" -e "s/,//g" | tr ']' '\n' | sed -e "s/^ //g" -e "s/ /|/g"` 
 	do 
@@ -47,8 +48,10 @@ then
 		then
 			Errors="true"
 			#The file did not exist....
-			echo "Result: File Error with exit code $exit_code"
-			Message+="FILE ERROR ==> Sample: $sample \t File: $filename \t Machine: $machine \t Exit Code: $exit_code. \n HadoopPath: $hdloc \n======================\n"
+			echo "Error running cksum:" >> $SS_CRON_OUTFILE
+			echo "File: $filename \t Sample: $sample \t  Machine: $machine \t Exit Code: $exit_code" >> $SS_CRON_OUTFILE
+			Message+="FILE ERROR \n======================\nFile: $filename \t Sample: $sample \t  Machine: $machine \t Exit Code: $exit_code. \n HadoopPath: $hdloc \n======================\n"
+
 		elif [[ "$lastcount" == "$ret" ]]
 		then
 			echo "Counts Equal \t Sample: $sample \t File: $filename" >> $SS_CRON_OUTFILE
@@ -70,6 +73,8 @@ else
 	#There was an error, we never got a list of files from the server
 	Errors="true"
 	date=`date "+%F_%H:%M:%S"`
+	echo `date`": Server is not reachable" >> $WEBLOG_FILE
+	sed -i '1d' $WEBLOG_FILE
 	echo "$date: Server may be down." >> $SS_CRON_OUTFILE
 	Message+="TIMEOUT ERROR: Timeout server response at $date, please restart the server manually.\n======================\n"
 fi
