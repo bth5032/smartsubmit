@@ -44,13 +44,15 @@ then
 		lastcount=`sqlite3 filetest.db "SELECT WordCount FROM FileInfo WHERE HadoopPath='$hdloc'"`
 		sample=$(basename `dirname $location`)
 		filename=`basename $location`
+		basedir=`echo $location | cut -d '/' -f 2`
 		if [[ ! "$exit_code" -eq 0 ]]
 		then
 			Errors="true"
 			#The file did not exist....
 			echo "Error running cksum:" >> $SS_CRON_OUTFILE
-			echo "File: $filename \t Sample: $sample \t  Machine: $machine \t Exit Code: $exit_code" >> $SS_CRON_OUTFILE
-			Message+="FILE ERROR \n======================\nFile: $filename \t Sample: $sample \t  Machine: $machine \t Exit Code: $exit_code. \n HadoopPath: $hdloc \n======================\n"
+			echo "File: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code" >> $SS_CRON_OUTFILE
+			echo "SSH output: $ssh_output" >> $SS_CRON_OUTFILE
+			Message+="FILE ERROR \n======================\nFile: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code. \n HadoopPath: $hdloc \n======================\n"
 
 		elif [[ "$lastcount" == "$ret" ]]
 		then
