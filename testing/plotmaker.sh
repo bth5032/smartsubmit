@@ -17,7 +17,7 @@ else
 	echo "REALTIME:USERTIME:SYSTIME" > ${timing_dir}/runtimes.txt
 	while read -r a
 	do 
-		b=`echo $a | sed -e 's/\(.*\)m\(.*\)s \(.*\)m\(.*\)s \(.*\)m\(.*\)s$/\1+\2|\3+\4|\5+\6/'`
+		b=`echo $a | sed -e 's/\(.*\)m\(.*\)s \(.*\)m\(.*\)s \(.*\)m\(.*\)s$/\1*60+\2|\3*60+\4|\5*60+\6/'`
 		rt=`echo $b | cut -d '|' -f 1 | bc` #real time
 		ut=`echo $b | cut -d '|' -f 2 | bc` #user time
 		st=`echo $b | cut -d '|' -f 3 | bc` #system time
