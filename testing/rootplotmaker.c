@@ -19,5 +19,5 @@ void rootplotmaker(TString fname, TString run_num="1")
 	runHist->SetXTitle("Real Time (seconds)");
 
 	runHist->Draw();
-	gPad->saveAs("runHist.png");
+	gPad->SaveAs("runHist.png");
 }
