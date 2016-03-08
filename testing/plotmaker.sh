@@ -21,7 +21,7 @@ else
 		rt=`echo $b | cut -d '|' -f 1 | bc` #real time
 		ut=`echo $b | cut -d '|' -f 2 | bc` #user time
 		st=`echo $b | cut -d '|' -f 3 | bc` #system time
-		echo $rt"\t"$ut"\t"$st >> ${timing_dir}/runtimes.txt
+		echo -e $rt"\t"$ut"\t"$st >> ${timing_dir}/runtimes.txt
 	done < ${timing_dir}/runtimes.tmp
 	
 	#root -l rootplotmaker.c('${timing_dir}/runtimes.txt')
