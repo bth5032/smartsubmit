@@ -12,7 +12,6 @@ else
 	line_num=`cat $tf | grep -n "^================$" | tail -n1 | cut -f 1 -d :` #get line where output per job starts
 	echo "found it: "$line_num
 	tail -n +$(( $line_num + 1 )) $tf | head -n-3 | cut -f 5,6,7 > ${timing_dir}/runtimes.tmp
-	cat ${timing_dir}/runtimes.tmp
 	echo "about to start reading from runtimes"
 	echo "REALTIME:USERTIME:SYSTIME" > ${timing_dir}/runtimes.txt
 	while read -r a
