@@ -8,8 +8,12 @@ then
 	echo "timing_dir not set, don't know what file to read"
 else
 	tf=${timing_dir}/timing_output.txt #timing output file
+	echo "Trying to find line number"
 	line_num=`cat $tf | grep -n "^================$" | tail -n1 | cut -f 1 -d :` #get line where output per job starts
-	tail -n +$(( $line_num + 1 )) | head -n-3 | cut -f 5,6,7 > ${timing_dir}/runtimes.tmp
+	echo "found it: "$line_num
+	tail -n +$(( $line_num + 1 )) $tf | head -n-3 | cut -f 5,6,7 > ${timing_dir}/runtimes.tmp
+	cat ${timing_dir}/runtimes.tmp
+	echo "about to start reading from runtimes"
 	echo "REALTIME:USERTIME:SYSTIME" > ${timing_dir}/runtimes.txt
 	while read -r a
 	do 
