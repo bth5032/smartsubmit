@@ -9,7 +9,7 @@ then
 else
 	tf=${timing_dir}/timing_output.txt #timing output file
 	line_num=`cat $tf | grep -n "^================$" | tail -n1 | cut -f 1 -d :` #get line where output per job starts
-	tail -n +$(( $l + 1 )) | head -n-3 | cut -f 5,6,7 > ${timing_dir}/runtimes.tmp
+	tail -n +$(( $line_num + 1 )) | head -n-3 | cut -f 5,6,7 > ${timing_dir}/runtimes.tmp
 	echo "REALTIME:USERTIME:SYSTIME" > ${timing_dir}/runtimes.txt
 	while read -r a
 	do 
