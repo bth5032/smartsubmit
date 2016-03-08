@@ -24,6 +24,6 @@ else
 		echo -e $rt"\t"$ut"\t"$st >> ${timing_dir}/runtimes.txt
 	done < ${timing_dir}/runtimes.tmp
 	
-	root -l -q  "rootplotmaker.c(\"${timing_dir}/runtimes.txt\")"
+	root -l -q -b  "rootplotmaker.c(\"${timing_dir}/runtimes.txt\")"
 	mv runHist.png ${timing_dir}
 fi
