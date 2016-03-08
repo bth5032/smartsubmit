@@ -17,9 +17,10 @@ def checkMachines(procs):
 
 def hrt(unix_time):
 	"""return human readable time"""
-	if unix_time:
+	try:
 		return datetime.datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d %H:%M:%S')
-	else:
+	except:
+		print("time could not be parsed")
 		return "N/A"
 
 def getClusterIds():
