@@ -12,8 +12,9 @@ void rootplotmaker(TString fname, TString run_num="1")
 	TTree *t = new TTree();
 	t->ReadFile(fname);
 
+	TH1F *runHist = new TH1F();
+	runHist->SetName("runHist")
 	t->Draw("REALTIME>>runHist");
-	TH1F *runHist = new TH1F("runHist");
 	runHist->SetTitle("Root Script Runtime for Smartsubmit Run "+run_num+", 4 .root files per job");
 	runHist->SetYTitle("Number of Jobs");
 	runHist->SetXTitle("Real Time (seconds)");
