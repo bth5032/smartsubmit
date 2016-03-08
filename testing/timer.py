@@ -11,7 +11,7 @@ def checkMachines(procs):
 	for jid in procs:
 		target=procs[jid]["stdout"].split("condorLog_")[1].split("_")[0]
 		if not target == procs[jid]["machine"]:
-			wrong_machines[jid] = procs[jid][stdout]
+			wrong_machines[jid] = procs[jid]["stdout"]
 	
 	return wrong_machines
 
@@ -171,6 +171,7 @@ ID\tStart\tRoot Start\tRoot End\tRoot Real Time\tRoot Sys Time\tRoot User Time\t
 		print("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (jid, procs[jid]["time_start"], procs[jid]["root_start"], procs[jid]["root_end"], procs[jid]["root_real"], procs[jid]["root_sys"], procs[jid]["root_user"], procs[jid]["time_end"], procs[jid]["file_time_hr"]))
 
 	wrong_machines = checkMachines(procs)
+
 
 	if wrong_machines:
 		print("\n===========================================\nThere were some jobs that did not land on the proper machines")
