@@ -3,7 +3,7 @@
 # Makes root readable data files from the specified directory
 ###########
 
-if [[ ! -z ${timing_dir+x} ]]
+if [[ -z ${timing_dir+x} ]]
 then
 	echo "timing_dir not set, don't know what file to read"
 else
