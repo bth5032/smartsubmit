@@ -87,6 +87,8 @@ function UC {
 	cp $ssd/testing/timer.py .
 	cp $ssd/testing/plotmaker.sh .
 	cp $ssd/testing/rootplotmaker.c .
+	cp $ssd/testing/functions.sh .
+	. functions.sh
 }
 
 function rmSS {
