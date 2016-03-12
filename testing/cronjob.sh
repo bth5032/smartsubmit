@@ -51,7 +51,7 @@ then
 			rightnow=`date`
 			#The file did not exist....
 			echo "Error running cksum:" >> $SS_CRON_OUTFILE
-			echo "File: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code \t Time: $rightnow" >> $SS_CRON_OUTFILE
+			echo "File: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code \t Time: $rightnow \n OUT: $ssh_output" >> $SS_CRON_OUTFILE
 			echo "SSH output: $ssh_output" >> $SS_CRON_OUTFILE
 			Message+="FILE ERROR \n======================\nFile: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code \t Time: $rightnow. \n HadoopPath: $hdloc \n======================\n"
 
