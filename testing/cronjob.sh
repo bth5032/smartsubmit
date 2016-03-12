@@ -48,11 +48,12 @@ then
 		if [[ ! "$exit_code" -eq 0 ]]
 		then
 			Errors="true"
+			rightnow=`date`
 			#The file did not exist....
 			echo "Error running cksum:" >> $SS_CRON_OUTFILE
-			echo "File: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code" >> $SS_CRON_OUTFILE
+			echo "File: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code \t Time: $rightnow" >> $SS_CRON_OUTFILE
 			echo "SSH output: $ssh_output" >> $SS_CRON_OUTFILE
-			Message+="FILE ERROR \n======================\nFile: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code. \n HadoopPath: $hdloc \n======================\n"
+			Message+="FILE ERROR \n======================\nFile: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Exit Code: $exit_code \t Time: $rightnow. \n HadoopPath: $hdloc \n======================\n"
 
 		elif [[ "$lastcount" == "$ret" ]]
 		then
@@ -64,11 +65,12 @@ then
 			sqlite3 filetest.db "INSERT INTO FileInfo(HadoopPath, WordCount, LastCheckDate) Values('$hdloc','$ret','$date')"
 		else
 			Errors="true"
-			echo "Counts don't agree Sample: $sample \t File: $filename" >> $SS_CRON_OUTFILE
+			rightnow=`date`
+			echo "Counts don't agree Sample: $sample \t File: $filename \t Time: $rightnow" >> $SS_CRON_OUTFILE
 			LastCheckDate=`sqlite3 filetest.db "SELECT LastCheckDate FROM FileInfo WHERE HadoopPath='$hdloc'"`
 			echo "Last count $LastCountDate -- $lastcount" >> $SS_CRON_OUTFILE
 			echo "This count $ret" >> $SS_CRON_OUTFILE
-			Message+="COUNT ERROR: Issue with file at hadoop location $hdloc \n  TODAY : $ret ==||== $LastCheckDate:  $lastcount.\n======================\n"
+			Message+="COUNT ERROR \n======================\nFile: $filename \t Sample: $sample \t  Machine: $machine \t Disk: $basedir \t Time: $rightnow \nTODAY : $ret ==||== $LastCheckDate:  $lastcount.\n======================\n"
 		fi
 	done
 else
@@ -78,7 +80,7 @@ else
 	echo `date`": Server is not reachable" >> $WEBLOG_FILE
 	sed -i '1d' $WEBLOG_FILE
 	echo "$date: Server may be down." >> $SS_CRON_OUTFILE
-	Message+="TIMEOUT ERROR: Timeout server response at $date, please restart the server manually.\n======================\n"
+	Message+="SMARTSUBMIT DAEMON TIMEOUT \n======================\n Timeout server response at $date, please restart the server manually.\n======================\n"
 fi
 
 echo "=================================================\n" >> $SS_CRON_OUTFILE
