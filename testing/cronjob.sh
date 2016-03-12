@@ -8,7 +8,7 @@ Message=""
 Errors="false"
 
 
-SS_CRON_OUTFILE="/root/ss_testing/output/"`date +%d%B%Y`".output"
+SS_CRON_OUTFILE="/root/ss_testing/outfiles/"`date +%d%B%Y_%H`".output"
 WEBLOG_FILE="/root/ss_testing/weblog"
 
 if [[ ! -f $WEBLOG_FILE ]]
