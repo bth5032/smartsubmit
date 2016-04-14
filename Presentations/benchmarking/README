@@ -1,0 +1,12 @@
+Smartsubmit was scrapped during the benchmarking phase for several reasons. The basic idea was that the complexity smartsubmit adds to our systems probably adds more of time delay to babymaking than the speedup from smartsubmit's imporved batch submission. 
+
+The two advances smartsubmit made was 
+1) IOSlot batch submission. This meant that jobs would not sit in the standard condor cms que, rather they would land in one of several reserved IOSlots immediately. This step should speed up the average time to make babies with basically no increase in complexity by essentially removing the entirety of the time that jobs will sit in que with a single additional line in the condor_submit file. 
+
+2) Local miniAOD files. Smartsubmit managed the location of .root files on local disks installed in machines which supported IOSlot submission. Then when a user wanted to submit a job, they would use smartsubmit to correctly tag the submit files so that they would land on the proper machines. 
+
+It was found that (2), the reading miniAOD files from local disks did not speed up reading fast enough to justify the added complexity of smartsubmit. 
+
+The chain of events went as such: 
+
+(1)
